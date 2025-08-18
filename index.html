@@ -650,10 +650,31 @@
     </div>
 
     <script>
-        // Array per memorizzare i compiti e le notifiche
-        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        let notifications = JSON.parse(localStorage.getItem('notifications')) || [];
+        // Array per memorizzare i compiti e le notifiche - con controlli di sicurezza
+        let tasks = [];
+        let notifications = [];
         let alertCounter = 0;
+
+        // Inizializzazione sicura del localStorage
+        try {
+            const savedTasks = localStorage.getItem('tasks');
+            const savedNotifications = localStorage.getItem('notifications');
+            
+            if (savedTasks) {
+                tasks = JSON.parse(savedTasks) || [];
+            }
+            if (savedNotifications) {
+                notifications = JSON.parse(savedNotifications) || [];
+            }
+            
+            console.log('✅ Dati caricati dal localStorage');
+            console.log('Tasks caricati:', tasks.length);
+            console.log('Notifications caricate:', notifications.length);
+        } catch (error) {
+            console.error('❌ Errore nel caricamento localStorage:', error);
+            tasks = [];
+            notifications = [];
+        }
 
         // Stati possibili
         const taskStates = {
@@ -684,14 +705,25 @@
             return date.toLocaleDateString('it-IT');
         }
 
-        // Funzione per salvare i compiti nel localStorage
+        // Funzione per salvare i compiti nel localStorage - con controlli
         function saveTasks() {
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            try {
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                console.log('✅ Tasks salvati nel localStorage:', tasks.length, 'compiti');
+            } catch (error) {
+                console.error('❌ Errore nel salvataggio tasks:', error);
+                alert('Errore nel salvataggio! Controlla lo spazio di archiviazione del browser.');
+            }
         }
 
-        // Funzione per salvare le notifiche
+        // Funzione per salvare le notifiche - con controlli
         function saveNotifications() {
-            localStorage.setItem('notifications', JSON.stringify(notifications));
+            try {
+                localStorage.setItem('notifications', JSON.stringify(notifications));
+                console.log('✅ Notifications salvate nel localStorage');
+            } catch (error) {
+                console.error('❌ Errore nel salvataggio notifications:', error);
+            }
         }
 
         // Funzione per mostrare alert
@@ -881,43 +913,63 @@
             return `${diffDays}g fa`;
         }
 
-        // Funzione per aggiungere un nuovo compito
+        // Funzione per aggiungere un nuovo compito - versione robusta
         function addTask(taskData) {
-            console.log('Aggiungendo compito:', taskData);
-            
-            const task = {
-                id: generateId(),
-                title: taskData.title,
-                description: taskData.description,
-                assignee: taskData.assignee,
-                priority: taskData.priority,
-                dueDate: taskData.dueDate,
-                status: taskData.status,
-                reminderEnabled: taskData.reminderEnabled,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            
-            console.log('Compito creato:', task);
-            
-            tasks.push(task);
-            console.log('Tasks array dopo aggiunta:', tasks);
-            
-            saveTasks();
-            renderTasks();
-            updateStats();
-            
-            // Notifica di creazione compito
-            addNotification('assigned', 'Nuovo Compito Creato', 
-                `Compito "${task.title}" assegnato a ${task.assignee}`, task.id);
-            
-            // Se ha promemoria attivo, verifica se è vicino alla scadenza
-            if (task.reminderEnabled && task.dueDate) {
-                scheduleReminder(task);
+            try {
+                console.log('🚀 Inizio aggiunta compito:', taskData);
+                
+                // Validazione dati
+                if (!taskData.title || !taskData.assignee) {
+                    throw new Error('Titolo e Assegnato sono obbligatori');
+                }
+                
+                const task = {
+                    id: generateId(),
+                    title: String(taskData.title).trim(),
+                    description: String(taskData.description || '').trim(),
+                    assignee: String(taskData.assignee).trim(),
+                    priority: taskData.priority || 'media',
+                    dueDate: taskData.dueDate || '',
+                    status: taskData.status || 'da-iniziare',
+                    reminderEnabled: Boolean(taskData.reminderEnabled),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                console.log('📝 Compito creato:', task);
+                
+                // Aggiungi all'array
+                tasks.push(task);
+                console.log('📊 Totale compiti dopo aggiunta:', tasks.length);
+                
+                // Salva nel localStorage
+                saveTasks();
+                
+                // Aggiorna interfaccia
+                console.log('🔄 Aggiornamento interfaccia...');
+                renderTasks();
+                updateStats();
+                
+                // Notifica di successo
+                console.log('✅ Compito aggiunto con successo!');
+                showAlert('success', 'Compito Creato!', `"${task.title}" assegnato a ${task.assignee}`);
+                
+                // Notifica nell'elenco
+                addNotification('assigned', 'Nuovo Compito Creato', 
+                    `Compito "${task.title}" assegnato a ${task.assignee}`, task.id);
+                
+                // Promemoria se attivo
+                if (task.reminderEnabled && task.dueDate) {
+                    scheduleReminder(task);
+                }
+                
+                return task;
+                
+            } catch (error) {
+                console.error('❌ Errore nell\'aggiunta del compito:', error);
+                showAlert('danger', 'Errore!', error.message || 'Impossibile aggiungere il compito');
+                return null;
             }
-            
-            // Mostra alert di successo
-            showAlert('success', 'Compito Creato!', `Il compito "${task.title}" è stato aggiunto con successo`);
         }
 
         // Funzione per aggiornare lo stato di un compito
@@ -1076,55 +1128,159 @@
             XLSX.writeFile(wb, filename);
         }
 
-        // Event listener per il form
-        document.getElementById('taskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        // Event listener per il form - versione robusta
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🎯 DOM caricato, inizializzazione form...');
             
-            // Debug: Verifica che i campi siano compilati
-            const title = document.getElementById('taskTitle').value.trim();
-            const assignee = document.getElementById('taskAssignee').value.trim();
-            
-            if (!title || !assignee) {
-                showAlert('danger', 'Errore!', 'Titolo e Assegnato sono campi obbligatori');
+            const taskForm = document.getElementById('taskForm');
+            if (!taskForm) {
+                console.error('❌ Form non trovato!');
                 return;
             }
             
-            const formData = {
-                title: title,
-                description: document.getElementById('taskDescription').value.trim(),
-                assignee: assignee,
-                priority: document.getElementById('taskPriority').value,
-                dueDate: document.getElementById('taskDueDate').value,
-                status: document.getElementById('taskStatus').value,
-                reminderEnabled: document.getElementById('enableReminder').checked
-            };
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('📝 Form sottomesso');
+                
+                try {
+                    // Recupera i valori dai campi
+                    const titleElement = document.getElementById('taskTitle');
+                    const assigneeElement = document.getElementById('taskAssignee');
+                    const descriptionElement = document.getElementById('taskDescription');
+                    const priorityElement = document.getElementById('taskPriority');
+                    const dueDateElement = document.getElementById('taskDueDate');
+                    const statusElement = document.getElementById('taskStatus');
+                    const reminderElement = document.getElementById('enableReminder');
+                    
+                    if (!titleElement || !assigneeElement) {
+                        throw new Error('Campi del form non trovati');
+                    }
+                    
+                    const title = titleElement.value.trim();
+                    const assignee = assigneeElement.value.trim();
+                    
+                    console.log('📋 Dati form:', { title, assignee });
+                    
+                    if (!title) {
+                        throw new Error('Il titolo è obbligatorio');
+                    }
+                    
+                    if (!assignee) {
+                        throw new Error('Il campo "Assegnato a" è obbligatorio');
+                    }
+                    
+                    const formData = {
+                        title: title,
+                        description: descriptionElement ? descriptionElement.value.trim() : '',
+                        assignee: assignee,
+                        priority: priorityElement ? priorityElement.value : 'media',
+                        dueDate: dueDateElement ? dueDateElement.value : '',
+                        status: statusElement ? statusElement.value : 'da-iniziare',
+                        reminderEnabled: reminderElement ? reminderElement.checked : false
+                    };
+                    
+                    console.log('📦 Dati completi da inviare:', formData);
+                    
+                    // Aggiungi il compito
+                    const result = addTask(formData);
+                    
+                    if (result) {
+                        // Reset form solo se successo
+                        this.reset();
+                        console.log('✅ Form resettato');
+                        
+                        // Feedback visivo
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            const originalText = submitBtn.textContent;
+                            const originalStyle = submitBtn.style.background;
+                            
+                            submitBtn.textContent = '✅ Compito Aggiunto!';
+                            submitBtn.style.background = '#27ae60';
+                            
+                            setTimeout(() => {
+                                submitBtn.textContent = originalText;
+                                submitBtn.style.background = originalStyle;
+                            }, 2000);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore nel form:', error);
+                    showAlert('danger', 'Errore!', error.message);
+                }
+            });
             
-            console.log('Dati compito da aggiungere:', formData);
-            addTask(formData);
-            this.reset();
-            
-            // Feedback visivo
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '✅ Compito Aggiunto!';
-            submitBtn.style.background = '#27ae60';
-            
-            setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.style.background = '';
-            }, 2000);
+            console.log('✅ Form listener aggiunto con successo');
         });
 
-        // Inizializzazione
-        renderTasks();
-        updateStats();
-        renderNotifications();
+        // Inizializzazione con controlli robusti
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inizializzazione app...');
+            console.log('📊 Tasks array:', tasks);
+            console.log('📱 Tasks nel localStorage:', localStorage.getItem('tasks'));
+            
+            try {
+                renderTasks();
+                updateStats();
+                renderNotifications();
+                
+                console.log('✅ Interfaccia inizializzata');
+                
+                // Controlla scadenze all'avvio
+                setTimeout(() => {
+                    console.log('🔔 Controllo scadenze...');
+                    checkDeadlines();
+                }, 2000);
+                
+                // Controlla scadenze periodicamente (ogni ora)
+                setInterval(checkDeadlines, 3600000);
+                
+            } catch (error) {
+                console.error('❌ Errore nell\'inizializzazione:', error);
+                showAlert('danger', 'Errore!', 'Problema nell\'inizializzazione dell\'app');
+            }
+        });
         
-        // Controlla scadenze all'avvio
-        setTimeout(checkDeadlines, 2000);
+        // Funzione di debug migliorata
+        window.debugApp = function() {
+            console.log('=== 🔍 DEBUG APP ===');
+            console.log('Tasks array length:', tasks.length);
+            console.log('Tasks array:', tasks);
+            console.log('Tasks nel localStorage:', localStorage.getItem('tasks'));
+            console.log('Notifications array length:', notifications.length);
+            console.log('Notifications array:', notifications);
+            console.log('===================');
+            
+            // Testa se il DOM è OK
+            const form = document.getElementById('taskForm');
+            const grid = document.getElementById('tasksGrid');
+            console.log('Form trovato:', !!form);
+            console.log('Grid trovato:', !!grid);
+            
+            return {
+                tasks: tasks,
+                notifications: notifications,
+                formExists: !!form,
+                gridExists: !!grid
+            };
+        };
         
-        // Controlla scadenze periodicamente (ogni ora)
-        setInterval(checkDeadlines, 3600000);
+        // Test rapido per aggiungere un compito di prova
+        window.testAddTask = function() {
+            console.log('🧪 Test aggiunta compito...');
+            const testTask = {
+                title: 'Test Compito',
+                description: 'Questo è un compito di test',
+                assignee: 'Test User',
+                priority: 'media',
+                dueDate: '',
+                status: 'da-iniziare',
+                reminderEnabled: false
+            };
+            
+            return addTask(testTask);
+        };
     </script>
 </body>
 </html>
