@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestore Compiti</title>
+    <title>Gestore Compiti - Gruppo Visconti</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -102,6 +102,181 @@
 
         .main-content {
             padding: 30px;
+        }
+
+        /* Stili per gli alert */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            border-left: 5px solid #27ae60;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            color: white;
+            border-left: 5px solid #e67e22;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-left: 5px solid #c0392b;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border-left: 5px solid #2980b9;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .alert-message {
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Badge per scadenze */
+        .due-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .due-overdue {
+            background: #ffebee;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+
+        .due-today {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .due-soon {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Sezione notifiche */
+        .notifications-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .notification-item:hover {
+            transform: translateX(5px);
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .notification-text {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .notification-time {
+            color: #bdc3c7;
+            font-size: 0.8rem;
+            margin-left: 15px;
         }
 
         .task-form {
@@ -324,188 +499,6 @@
             color: #7f8c8d;
         }
 
-        .empty-state img {
-            width: 120px;
-            height: 120px;
-            margin-bottom: 20px;
-            opacity: 0.5;
-        }
-
-        /* Stili per gli alert */
-        .alert-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            max-width: 400px;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            animation: slideInRight 0.3s ease-out;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-            border-left: 5px solid #27ae60;
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
-            color: white;
-            border-left: 5px solid #e67e22;
-        }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border-left: 5px solid #c0392b;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            border-left: 5px solid #2980b9;
-        }
-
-        .alert-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-        }
-
-        .alert-message {
-            opacity: 0.9;
-            line-height: 1.4;
-        }
-
-        .alert-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
-
-        .alert-close:hover {
-            opacity: 1;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        /* Badge per scadenze */
-        .due-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 10px;
-        }
-
-        .due-overdue {
-            background: #ffebee;
-            color: #c62828;
-            animation: pulse 2s infinite;
-        }
-
-        .due-today {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
-
-        .due-soon {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Sezione notifiche */
-        .notifications-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s;
-        }
-
-        .notification-item:hover {
-            transform: translateX(5px);
-        }
-
-        .notification-icon {
-            font-size: 1.5rem;
-            margin-right: 15px;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 2px;
-        }
-
-        .notification-text {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .notification-time {
-            color: #bdc3c7;
-            font-size: 0.8rem;
-            margin-left: 15px;
-        }
-
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -523,6 +516,15 @@
                 left: 20px;
                 right: 20px;
                 max-width: none;
+            }
+
+            .company-logo {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logo-text {
+                font-size: 2.2rem;
             }
         }
     </style>
@@ -553,6 +555,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Statistiche -->
             <div class="stats-section" id="statsSection">
                 <div class="stat-card">
@@ -877,7 +880,6 @@
             }
             
             console.log(`🔔 Rendering notifiche - Totale: ${notifications.length}`);
-            console.log('📋 Notifiche attuali:', notifications.map(n => ({id: n.id, title: n.title, taskId: n.taskId})));
             
             if (notifications.length === 0) {
                 notificationsList.innerHTML = `
@@ -1185,7 +1187,7 @@
 
             XLSX.utils.book_append_sheet(wb, ws, "Compiti");
             
-            const filename = `compiti_${new Date().toISOString().split('T')[0]}.xlsx`;
+            const filename = `compiti_gruppo_visconti_${new Date().toISOString().split('T')[0]}.xlsx`;
             XLSX.writeFile(wb, filename);
         }
 
@@ -1326,7 +1328,7 @@
                 gridExists: !!grid
             };
         };
-        
+
         // Test per verificare l'eliminazione delle notifiche
         window.testDeleteNotifications = function(taskId) {
             console.log('🧪 Test eliminazione notifiche per taskId:', taskId);
@@ -1362,6 +1364,22 @@
             renderNotifications();
             console.log('✅ Aggiornamento completato');
         };
+
+        // Test rapido per aggiungere un compito di prova
+        window.testAddTask = function() {
+            console.log('🧪 Test aggiunta compito...');
+            const testTask = {
+                title: 'Test Compito',
+                description: 'Questo è un compito di test',
+                assignee: 'Test User',
+                priority: 'media',
+                dueDate: '',
+                status: 'da-iniziare',
+                reminderEnabled: false
+            };
+            
+            return addTask(testTask);
+        };
         
         // Funzione di pulizia per rimuovere notifiche orfane
         window.cleanupNotifications = function() {
@@ -1388,6 +1406,26 @@
             }
             
             return removedCount;
+        };
+
+        // Funzione per pulire tutto (reset completo)
+        window.resetApp = function() {
+            if (confirm('Sei sicuro di voler cancellare TUTTI i dati? Questa operazione non può essere annullata.')) {
+                console.log('🗑️ Reset completo dell\'app...');
+                
+                tasks = [];
+                notifications = [];
+                
+                localStorage.removeItem('tasks');
+                localStorage.removeItem('notifications');
+                
+                renderTasks();
+                updateStats();
+                renderNotifications();
+                
+                showAlert('success', 'Reset Completato', 'Tutti i dati sono stati cancellati');
+                console.log('✅ App resettata completamente');
+            }
         };
     </script>
 </body>
