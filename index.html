@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestore Compiti</title>
+    <title>Gestore Compiti - Gruppo Visconti</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -102,6 +102,181 @@
 
         .main-content {
             padding: 30px;
+        }
+
+        /* Stili per gli alert */
+        .alert-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            animation: slideInRight 0.3s ease-out;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+            color: white;
+            border-left: 5px solid #27ae60;
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            color: white;
+            border-left: 5px solid #e67e22;
+        }
+
+        .alert-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+            border-left: 5px solid #c0392b;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border-left: 5px solid #2980b9;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+
+        .alert-message {
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .alert-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .alert-close:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Badge per scadenze */
+        .due-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-left: 10px;
+        }
+
+        .due-overdue {
+            background: #ffebee;
+            color: #c62828;
+            animation: pulse 2s infinite;
+        }
+
+        .due-today {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .due-soon {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Sezione notifiche */
+        .notifications-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .notification-item:hover {
+            transform: translateX(5px);
+        }
+
+        .notification-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 2px;
+        }
+
+        .notification-text {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .notification-time {
+            color: #bdc3c7;
+            font-size: 0.8rem;
+            margin-left: 15px;
         }
 
         .task-form {
@@ -331,181 +506,6 @@
             opacity: 0.5;
         }
 
-        /* Stili per gli alert */
-        .alert-container {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            max-width: 400px;
-        }
-
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            animation: slideInRight 0.3s ease-out;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-            color: white;
-            border-left: 5px solid #27ae60;
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
-            color: white;
-            border-left: 5px solid #e67e22;
-        }
-
-        .alert-danger {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            color: white;
-            border-left: 5px solid #c0392b;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            border-left: 5px solid #2980b9;
-        }
-
-        .alert-title {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 1.1rem;
-        }
-
-        .alert-message {
-            opacity: 0.9;
-            line-height: 1.4;
-        }
-
-        .alert-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.2rem;
-            cursor: pointer;
-            opacity: 0.7;
-            transition: opacity 0.3s;
-        }
-
-        .alert-close:hover {
-            opacity: 1;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-        }
-
-        /* Badge per scadenze */
-        .due-badge {
-            padding: 3px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-left: 10px;
-        }
-
-        .due-overdue {
-            background: #ffebee;
-            color: #c62828;
-            animation: pulse 2s infinite;
-        }
-
-        .due-today {
-            background: #fff3e0;
-            color: #ef6c00;
-        }
-
-        .due-soon {
-            background: #f3e5f5;
-            color: #7b1fa2;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Sezione notifiche */
-        .notifications-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-        }
-
-        .notification-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            background: white;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border-left: 4px solid #667eea;
-            transition: transform 0.2s;
-        }
-
-        .notification-item:hover {
-            transform: translateX(5px);
-        }
-
-        .notification-icon {
-            font-size: 1.5rem;
-            margin-right: 15px;
-        }
-
-        .notification-content {
-            flex: 1;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 2px;
-        }
-
-        .notification-text {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .notification-time {
-            color: #bdc3c7;
-            font-size: 0.8rem;
-            margin-left: 15px;
-        }
-
         @media (max-width: 768px) {
             .form-row {
                 grid-template-columns: 1fr;
@@ -553,6 +553,7 @@
                     </div>
                 </div>
             </div>
+
             <!-- Statistiche -->
             <div class="stats-section" id="statsSection">
                 <div class="stat-card">
@@ -818,291 +819,3 @@
                         `Il compito "${task.title}" scade tra ${diffDays} giorni`, task.id);
                 }
             });
-            
-            // Riepilogo
-            if (overdueCount === 0 && todayCount === 0 && soonCount === 0) {
-                showAlert('success', 'Tutto OK!', 'Non ci sono compiti in scadenza');
-            } else {
-                const summary = [];
-                if (overdueCount > 0) summary.push(`${overdueCount} scaduti`);
-                if (todayCount > 0) summary.push(`${todayCount} scadono oggi`);
-                if (soonCount > 0) summary.push(`${soonCount} in scadenza presto`);
-                
-                showAlert('warning', 'Riepilogo Scadenze', summary.join(', '));
-            }
-        }
-
-        // Funzione per renderizzare le notifiche
-        function renderNotifications() {
-            const notificationsList = document.getElementById('notificationsList');
-            
-            if (notifications.length === 0) {
-                notificationsList.innerHTML = `
-                    <div class="empty-state" style="padding: 20px;">
-                        <div style="font-size: 2rem; margin-bottom: 10px;">🔔</div>
-                        <p style="margin: 0;">Nessuna notifica al momento</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const icons = {
-                'deadline': '⏰',
-                'overdue': '🚨',
-                'completed': '✅',
-                'assigned': '📋',
-                'reminder': '🔔'
-            };
-
-            notificationsList.innerHTML = notifications.slice(0, 10).map(notif => `
-                <div class="notification-item">
-                    <div class="notification-icon">${icons[notif.type] || '🔔'}</div>
-                    <div class="notification-content">
-                        <div class="notification-title">${notif.title}</div>
-                        <div class="notification-text">${notif.message}</div>
-                    </div>
-                    <div class="notification-time">${getTimeAgo(notif.timestamp)}</div>
-                </div>
-            `).join('');
-        }
-
-        // Funzione per calcolare il tempo trascorso
-        function getTimeAgo(timestamp) {
-            const now = new Date();
-            const time = new Date(timestamp);
-            const diffMs = now - time;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMs / 3600000);
-            const diffDays = Math.floor(diffMs / 86400000);
-            
-            if (diffMins < 1) return 'Ora';
-            if (diffMins < 60) return `${diffMins}m fa`;
-            if (diffHours < 24) return `${diffHours}h fa`;
-            return `${diffDays}g fa`;
-        }
-
-        // Funzione per aggiungere un nuovo compito
-        function addTask(taskData) {
-            const task = {
-                id: generateId(),
-                title: taskData.title,
-                description: taskData.description,
-                assignee: taskData.assignee,
-                priority: taskData.priority,
-                dueDate: taskData.dueDate,
-                status: taskData.status,
-                reminderEnabled: taskData.reminderEnabled,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            };
-            
-            tasks.push(task);
-            saveTasks();
-            renderTasks();
-            updateStats();
-            
-            // Notifica di creazione compito
-            addNotification('assigned', 'Nuovo Compito Creato', 
-                `Compito "${task.title}" assegnato a ${task.assignee}`, task.id);
-            
-            // Se ha promemoria attivo, verifica se è vicino alla scadenza
-            if (task.reminderEnabled && task.dueDate) {
-                scheduleReminder(task);
-            }
-        }
-
-        // Funzione per aggiornare lo stato di un compito
-        function updateTaskStatus(taskId, newStatus) {
-            const task = tasks.find(t => t.id === taskId);
-            if (task) {
-                const oldStatus = task.status;
-                task.status = newStatus;
-                task.updatedAt = new Date().toISOString();
-                saveTasks();
-                renderTasks();
-                updateStats();
-                
-                // Notifica cambio stato
-                if (newStatus === 'completato' && oldStatus !== 'completato') {
-                    addNotification('completed', 'Compito Completato!', 
-                        `Il compito "${task.title}" è stato completato`, task.id);
-                } else if (newStatus === 'in-corso' && oldStatus === 'da-iniziare') {
-                    addNotification('reminder', 'Compito Iniziato', 
-                        `Il lavoro su "${task.title}" è iniziato`, task.id);
-                }
-            }
-        }
-
-        // Funzione per programmare promemoria
-        function scheduleReminder(task) {
-            if (!task.dueDate) return;
-            
-            const now = new Date();
-            const dueDate = new Date(task.dueDate);
-            const reminderDate = new Date(dueDate);
-            reminderDate.setDate(reminderDate.getDate() - 1); // 1 giorno prima
-            
-            if (reminderDate > now) {
-                const timeUntilReminder = reminderDate.getTime() - now.getTime();
-                setTimeout(() => {
-                    if (task.status !== 'completato' && task.status !== 'annullato') {
-                        addNotification('reminder', 'Promemoria Scadenza', 
-                            `Il compito "${task.title}" scade domani!`, task.id);
-                    }
-                }, timeUntilReminder);
-            }
-        }
-
-        // Funzione per eliminare un compito
-        function deleteTask(taskId) {
-            if (confirm('Sei sicuro di voler eliminare questo compito?')) {
-                tasks = tasks.filter(t => t.id !== taskId);
-                saveTasks();
-                renderTasks();
-                updateStats();
-            }
-        }
-
-        // Funzione per renderizzare i compiti
-        function renderTasks() {
-            const tasksGrid = document.getElementById('tasksGrid');
-            
-            if (tasks.length === 0) {
-                tasksGrid.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 4rem; margin-bottom: 20px;">📋</div>
-                        <h3>Nessun compito presente</h3>
-                        <p>Aggiungi il tuo primo compito utilizzando il form sopra</p>
-                    </div>
-                `;
-                return;
-            }
-
-            tasksGrid.innerHTML = tasks.map(task => `
-                <div class="task-card">
-                    <div class="task-title">${task.title}</div>
-                    <div class="task-description">${task.description || 'Nessuna descrizione'}</div>
-                    
-                    <div class="task-meta">
-                        <div class="task-assignee">👤 ${task.assignee}</div>
-                        <div class="task-date">
-                            ${formatDate(task.dueDate) || 'Nessuna scadenza'}
-                            ${getDueBadge(task.dueDate)}
-                        </div>
-                    </div>
-                    
-                    <div class="task-meta">
-                        <div class="task-priority ${priorities[task.priority].class}">
-                            ${priorities[task.priority].label}
-                        </div>
-                        <div class="task-date">Creato: ${formatDate(task.createdAt.split('T')[0])}</div>
-                    </div>
-                    
-                    <div class="task-status">
-                        <select class="status-select" onchange="updateTaskStatus('${task.id}', this.value)">
-                            ${Object.keys(taskStates).map(state => 
-                                `<option value="${state}" ${task.status === state ? 'selected' : ''}>
-                                    ${taskStates[state].label}
-                                </option>`
-                            ).join('')}
-                        </select>
-                        <button onclick="deleteTask('${task.id}')" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        // Funzione per aggiornare le statistiche
-        function updateStats() {
-            const totalTasks = tasks.length;
-            const inProgressTasks = tasks.filter(t => t.status === 'in-corso').length;
-            const completedTasks = tasks.filter(t => t.status === 'completato').length;
-            const pendingTasks = tasks.filter(t => t.status === 'da-iniziare').length;
-
-            document.getElementById('totalTasks').textContent = totalTasks;
-            document.getElementById('inProgressTasks').textContent = inProgressTasks;
-            document.getElementById('completedTasks').textContent = completedTasks;
-            document.getElementById('pendingTasks').textContent = pendingTasks;
-        }
-
-        // Funzione per esportare in Excel
-        function exportToExcel() {
-            if (tasks.length === 0) {
-                alert('Non ci sono compiti da esportare!');
-                return;
-            }
-
-            const worksheet_data = tasks.map(task => ({
-                'ID': task.id,
-                'Titolo': task.title,
-                'Descrizione': task.description || '',
-                'Assegnato a': task.assignee,
-                'Priorità': priorities[task.priority].label,
-                'Stato': taskStates[task.status].label,
-                'Scadenza': formatDate(task.dueDate) || '',
-                'Data Creazione': formatDate(task.createdAt.split('T')[0]),
-                'Ultimo Aggiornamento': formatDate(task.updatedAt.split('T')[0])
-            }));
-
-            const wb = XLSX.utils.book_new();
-            const ws = XLSX.utils.json_to_sheet(worksheet_data);
-
-            // Styling delle colonne
-            const range = XLSX.utils.decode_range(ws['!ref']);
-            for (let col = range.s.c; col <= range.e.c; col++) {
-                const address = XLSX.utils.encode_col(col) + "1";
-                if (!ws[address]) continue;
-                ws[address].s = {
-                    font: { bold: true },
-                    fill: { fgColor: { rgb: "EEEEEE" } }
-                };
-            }
-
-            XLSX.utils.book_append_sheet(wb, ws, "Compiti");
-            
-            const filename = `compiti_${new Date().toISOString().split('T')[0]}.xlsx`;
-            XLSX.writeFile(wb, filename);
-        }
-
-        // Event listener per il form
-        document.getElementById('taskForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                title: document.getElementById('taskTitle').value,
-                description: document.getElementById('taskDescription').value,
-                assignee: document.getElementById('taskAssignee').value,
-                priority: document.getElementById('taskPriority').value,
-                dueDate: document.getElementById('taskDueDate').value,
-                status: document.getElementById('taskStatus').value,
-                reminderEnabled: document.getElementById('enableReminder').checked
-            };
-            
-            addTask(formData);
-            this.reset();
-            
-            // Feedback visivo
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '✅ Compito Aggiunto!';
-            submitBtn.style.background = '#27ae60';
-            
-            setTimeout(() => {
-                submitBtn.textContent = originalText;
-                submitBtn.style.background = '';
-            }, 2000);
-        });
-
-        // Inizializzazione
-        renderTasks();
-        updateStats();
-        renderNotifications();
-        
-        // Controlla scadenze all'avvio
-        setTimeout(checkDeadlines, 2000);
-        
-        // Controlla scadenze periodicamente (ogni ora)
-        setInterval(checkDeadlines, 3600000);
-    </script>
-</body>
-</html>
