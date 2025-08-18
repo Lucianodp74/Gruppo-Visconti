@@ -759,7 +759,7 @@
             }
         }
 
-        // Funzione per aggiungere notifica
+        // Funzione per aggiungere notifica - con controllo duplicati
         function addNotification(type, title, message, taskId = null) {
             const notification = {
                 id: generateId(),
@@ -772,6 +772,7 @@
             };
             
             notifications.unshift(notification);
+            
             // Mantieni solo le ultime 50 notifiche
             if (notifications.length > 50) {
                 notifications = notifications.slice(0, 50);
@@ -786,13 +787,15 @@
                 'overdue': '🚨',
                 'completed': '✅',
                 'assigned': '📋',
-                'reminder': '🔔'
+                'reminder': '🔔',
+                'info': 'ℹ️'
             };
             
             showAlert(
                 type === 'overdue' ? 'danger' : 
                 type === 'deadline' ? 'warning' : 
-                type === 'completed' ? 'success' : 'info',
+                type === 'completed' ? 'success' : 
+                type === 'info' ? 'info' : 'info',
                 `${icons[type] || '🔔'} ${title}`,
                 message
             );
@@ -864,9 +867,17 @@
             }
         }
 
-        // Funzione per renderizzare le notifiche
+        // Funzione per renderizzare le notifiche - con debug migliorato
         function renderNotifications() {
             const notificationsList = document.getElementById('notificationsList');
+            
+            if (!notificationsList) {
+                console.error('❌ Elemento notificationsList non trovato');
+                return;
+            }
+            
+            console.log(`🔔 Rendering notifiche - Totale: ${notifications.length}`);
+            console.log('📋 Notifiche attuali:', notifications.map(n => ({id: n.id, title: n.title, taskId: n.taskId})));
             
             if (notifications.length === 0) {
                 notificationsList.innerHTML = `
@@ -875,6 +886,7 @@
                         <p style="margin: 0;">Nessuna notifica al momento</p>
                     </div>
                 `;
+                console.log('📭 Nessuna notifica da mostrare');
                 return;
             }
 
@@ -883,11 +895,15 @@
                 'overdue': '🚨',
                 'completed': '✅',
                 'assigned': '📋',
-                'reminder': '🔔'
+                'reminder': '🔔',
+                'info': 'ℹ️'
             };
 
-            notificationsList.innerHTML = notifications.slice(0, 10).map(notif => `
-                <div class="notification-item">
+            const notificationsToShow = notifications.slice(0, 10);
+            console.log(`📋 Mostro ${notificationsToShow.length} notifiche`);
+
+            notificationsList.innerHTML = notificationsToShow.map(notif => `
+                <div class="notification-item" ${notif.taskId ? `data-task-id="${notif.taskId}"` : ''}>
                     <div class="notification-icon">${icons[notif.type] || '🔔'}</div>
                     <div class="notification-content">
                         <div class="notification-title">${notif.title}</div>
@@ -896,6 +912,8 @@
                     <div class="notification-time">${getTimeAgo(notif.timestamp)}</div>
                 </div>
             `).join('');
+            
+            console.log(`✅ Renderizzate ${notificationsToShow.length} notifiche nel DOM`);
         }
 
         // Funzione per calcolare il tempo trascorso
@@ -1014,7 +1032,7 @@
             }
         }
 
-        // Funzione per eliminare un compito e le sue notifiche
+        // Funzione per eliminare un compito e le sue notifiche - VERSIONE CORRETTA
         function deleteTask(taskId) {
             if (confirm('Sei sicuro di voler eliminare questo compito? Verranno rimosse anche tutte le notifiche correlate.')) {
                 try {
@@ -1024,37 +1042,37 @@
                     const taskToDelete = tasks.find(t => t.id === taskId);
                     const taskTitle = taskToDelete ? taskToDelete.title : 'Compito sconosciuto';
                     
+                    // Conta le notifiche correlate PRIMA dell'eliminazione
+                    const relatedNotifications = notifications.filter(n => n.taskId === taskId);
+                    console.log(`📋 Trovate ${relatedNotifications.length} notifiche correlate al compito "${taskTitle}"`);
+                    
                     // Rimuovi il compito dall'array
-                    const originalLength = tasks.length;
+                    const originalTasksLength = tasks.length;
                     tasks = tasks.filter(t => t.id !== taskId);
                     
-                    if (tasks.length < originalLength) {
+                    // Rimuovi TUTTE le notifiche correlate a questo compito
+                    const originalNotificationsLength = notifications.length;
+                    notifications = notifications.filter(n => n.taskId !== taskId);
+                    
+                    const removedNotifications = originalNotificationsLength - notifications.length;
+                    
+                    if (tasks.length < originalTasksLength) {
                         console.log(`✅ Compito "${taskTitle}" rimosso dall'array`);
-                        
-                        // Rimuovi tutte le notifiche correlate a questo compito
-                        const originalNotificationsLength = notifications.length;
-                        notifications = notifications.filter(n => n.taskId !== taskId);
-                        
-                        if (notifications.length < originalNotificationsLength) {
-                            console.log(`🔔 Rimosse ${originalNotificationsLength - notifications.length} notifiche correlate`);
-                        }
+                        console.log(`🔔 Rimosse ${removedNotifications} notifiche correlate`);
                         
                         // Salva i dati aggiornati
                         saveTasks();
                         saveNotifications();
                         
-                        // Aggiorna l'interfaccia
+                        // Aggiorna TUTTO l'interfaccia
                         renderTasks();
                         updateStats();
-                        renderNotifications();
+                        renderNotifications(); // Questo dovrebbe aggiornare la sezione notifiche
                         
                         // Mostra notifica di eliminazione
-                        showAlert('info', 'Compito Eliminato', `"${taskTitle}" e le sue notifiche sono stati rimossi`);
+                        showAlert('info', 'Compito Eliminato', 
+                            `"${taskTitle}" eliminato${removedNotifications > 0 ? ` insieme a ${removedNotifications} notifiche` : ''}`);
                         
-                        // Aggiungi notifica di eliminazione al log
-                        addNotification('info', 'Compito Eliminato', 
-                            `Il compito "${taskTitle}" è stato eliminato definitivamente`);
-                            
                     } else {
                         console.error('❌ Compito non trovato per l\'eliminazione');
                         showAlert('warning', 'Attenzione', 'Compito non trovato');
@@ -1062,7 +1080,7 @@
                     
                 } catch (error) {
                     console.error('❌ Errore nell\'eliminazione:', error);
-                    showAlert('danger', 'Errore!', 'Impossibile eliminare il compito');
+                    showAlert('danger', 'Errore!', 'Impossibile eliminare il compito: ' + error.message);
                 }
             }
         }
@@ -1309,20 +1327,67 @@
             };
         };
         
-        // Test rapido per aggiungere un compito di prova
-        window.testAddTask = function() {
-            console.log('🧪 Test aggiunta compito...');
-            const testTask = {
-                title: 'Test Compito',
-                description: 'Questo è un compito di test',
-                assignee: 'Test User',
-                priority: 'media',
-                dueDate: '',
-                status: 'da-iniziare',
-                reminderEnabled: false
-            };
+        // Test per verificare l'eliminazione delle notifiche
+        window.testDeleteNotifications = function(taskId) {
+            console.log('🧪 Test eliminazione notifiche per taskId:', taskId);
             
-            return addTask(testTask);
+            if (!taskId && tasks.length > 0) {
+                taskId = tasks[0].id;
+                console.log('📋 Uso il primo compito disponibile:', taskId);
+            }
+            
+            if (!taskId) {
+                console.log('❌ Nessun compito disponibile per il test');
+                return;
+            }
+            
+            console.log('Prima dell\'eliminazione:');
+            console.log('- Tasks:', tasks.length);
+            console.log('- Notifications:', notifications.length);
+            console.log('- Notifications con taskId', taskId + ':', notifications.filter(n => n.taskId === taskId).length);
+            
+            deleteTask(taskId);
+            
+            setTimeout(() => {
+                console.log('Dopo l\'eliminazione:');
+                console.log('- Tasks:', tasks.length);
+                console.log('- Notifications:', notifications.length);
+                console.log('- Notifications con taskId', taskId + ':', notifications.filter(n => n.taskId === taskId).length);
+            }, 500);
+        };
+        
+        // Funzione per forzare l'aggiornamento delle notifiche
+        window.forceRefreshNotifications = function() {
+            console.log('🔄 Aggiornamento forzato notifiche...');
+            renderNotifications();
+            console.log('✅ Aggiornamento completato');
+        };
+        
+        // Funzione di pulizia per rimuovere notifiche orfane
+        window.cleanupNotifications = function() {
+            console.log('🧹 Pulizia notifiche orfane...');
+            
+            const taskIds = tasks.map(t => t.id);
+            const originalLength = notifications.length;
+            
+            // Mantieni solo notifiche senza taskId o con taskId validi
+            notifications = notifications.filter(notif => 
+                !notif.taskId || taskIds.includes(notif.taskId)
+            );
+            
+            const removedCount = originalLength - notifications.length;
+            
+            if (removedCount > 0) {
+                console.log(`🗑️ Rimosse ${removedCount} notifiche orfane`);
+                saveNotifications();
+                renderNotifications();
+                showAlert('info', 'Pulizia Completata', `Rimosse ${removedCount} notifiche obsolete`);
+            } else {
+                console.log('✅ Nessuna notifica orfana trovata');
+                showAlert('success', 'Tutto Pulito', 'Nessuna notifica obsoleta da rimuovere');
+            }
+            
+            return removedCount;
         };
     </script>
 </body>
