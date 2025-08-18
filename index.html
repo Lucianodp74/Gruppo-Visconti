@@ -1014,13 +1014,56 @@
             }
         }
 
-        // Funzione per eliminare un compito
+        // Funzione per eliminare un compito e le sue notifiche
         function deleteTask(taskId) {
-            if (confirm('Sei sicuro di voler eliminare questo compito?')) {
-                tasks = tasks.filter(t => t.id !== taskId);
-                saveTasks();
-                renderTasks();
-                updateStats();
+            if (confirm('Sei sicuro di voler eliminare questo compito? Verranno rimosse anche tutte le notifiche correlate.')) {
+                try {
+                    console.log(`🗑️ Eliminazione compito ID: ${taskId}`);
+                    
+                    // Trova il compito da eliminare per il messaggio
+                    const taskToDelete = tasks.find(t => t.id === taskId);
+                    const taskTitle = taskToDelete ? taskToDelete.title : 'Compito sconosciuto';
+                    
+                    // Rimuovi il compito dall'array
+                    const originalLength = tasks.length;
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    
+                    if (tasks.length < originalLength) {
+                        console.log(`✅ Compito "${taskTitle}" rimosso dall'array`);
+                        
+                        // Rimuovi tutte le notifiche correlate a questo compito
+                        const originalNotificationsLength = notifications.length;
+                        notifications = notifications.filter(n => n.taskId !== taskId);
+                        
+                        if (notifications.length < originalNotificationsLength) {
+                            console.log(`🔔 Rimosse ${originalNotificationsLength - notifications.length} notifiche correlate`);
+                        }
+                        
+                        // Salva i dati aggiornati
+                        saveTasks();
+                        saveNotifications();
+                        
+                        // Aggiorna l'interfaccia
+                        renderTasks();
+                        updateStats();
+                        renderNotifications();
+                        
+                        // Mostra notifica di eliminazione
+                        showAlert('info', 'Compito Eliminato', `"${taskTitle}" e le sue notifiche sono stati rimossi`);
+                        
+                        // Aggiungi notifica di eliminazione al log
+                        addNotification('info', 'Compito Eliminato', 
+                            `Il compito "${taskTitle}" è stato eliminato definitivamente`);
+                            
+                    } else {
+                        console.error('❌ Compito non trovato per l\'eliminazione');
+                        showAlert('warning', 'Attenzione', 'Compito non trovato');
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore nell\'eliminazione:', error);
+                    showAlert('danger', 'Errore!', 'Impossibile eliminare il compito');
+                }
             }
         }
 
