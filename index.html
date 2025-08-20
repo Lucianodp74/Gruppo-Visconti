@@ -716,8 +716,10 @@
                 </div>
             </div>
 
-            <div class="sync-grid" style="display: grid; grid-template-columns: 1fr auto; gap: 20px; margin-bottom: 20px;">
-                <div class="notifications-section" id="notificationsSection">
+            <!-- Sezione Notifiche e Sincronizzazione -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px;">
+                <!-- Notifiche -->
+                <div class="notifications-section">
                     <h2 class="section-title">🔔 Notifiche e Alert</h2>
                     <div id="notificationsList">
                         <div class="empty-state" style="padding: 20px;">
@@ -727,19 +729,32 @@
                     </div>
                 </div>
                 
-                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); min-width: 200px;">
-                    <h3 style="margin-bottom: 15px; color: #2c3e50; font-size: 1.2rem;">🔄 Sincronizzazione</h3>
-                    <div id="syncStatus" class="sync-status pending">🔄 In attesa...</div>
-                    <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
-                        <button onclick="showSyncOptions()" class="btn" style="background: #667eea; color: white; padding: 8px 12px; font-size: 14px;">
+                <!-- Pannello Sincronizzazione -->
+                <div class="sync-panel" style="background: #f8f9fa; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50; font-size: 1.2rem; text-align: center;">🔄 Sincronizzazione</h3>
+                    
+                    <div id="syncStatus" class="sync-status pending" style="text-align: center; margin-bottom: 15px;">
+                        🔄 In attesa...
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button onclick="showSyncOptions()" class="btn" 
+                                style="background: #667eea; color: white; padding: 10px 15px; font-size: 14px; width: 100%; border: none; border-radius: 6px; cursor: pointer;">
                             📱 Connetti Dispositivo
                         </button>
-                        <button onclick="showSyncInput()" class="btn" style="background: #95a5a6; color: white; padding: 8px 12px; font-size: 14px;">
+                        <button onclick="showSyncInput()" class="btn" 
+                                style="background: #95a5a6; color: white; padding: 10px 15px; font-size: 14px; width: 100%; border: none; border-radius: 6px; cursor: pointer;">
                             🔑 Inserisci Codice
                         </button>
                     </div>
-                    <div style="margin-top: 10px; font-size: 0.8rem; color: #7f8c8d;">
-                        Dispositivi: <span id="deviceCount">1</span>
+                    
+                    <div style="margin-top: 15px; text-align: center;">
+                        <div style="font-size: 0.8rem; color: #7f8c8d; margin-bottom: 8px;">
+                            Dispositivi Connessi: <span id="deviceCount" style="font-weight: bold; color: #2c3e50;">1</span>
+                        </div>
+                        <div style="font-size: 0.7rem; color: #bdc3c7;">
+                            Sync Key: <span id="displaySyncKey" style="font-family: monospace;">-</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1231,6 +1246,8 @@
 
         function updateSyncStatus() {
             const syncStatus = document.getElementById('syncStatus');
+            const displaySyncKey = document.getElementById('displaySyncKey');
+            
             if (!syncStatus) return;
             
             if (!navigator.onLine) {
@@ -1239,6 +1256,13 @@
             } else {
                 syncStatus.innerHTML = '✅ Online';
                 syncStatus.className = 'sync-status synced';
+            }
+            
+            // Mostra la sync key abbreviata
+            if (displaySyncKey && syncManager && syncManager.syncKey) {
+                const key = syncManager.syncKey;
+                displaySyncKey.textContent = key.substring(0, 8) + '...';
+                displaySyncKey.title = key; // Tooltip con la key completa
             }
         }
 
