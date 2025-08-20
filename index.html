@@ -154,7 +154,7 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        /* Form per nuovo compito - SPOSTATO IN ALTO */
+        /* Form per nuovo compito */
         .task-form {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; padding: 30px; margin-bottom: 30px; border-radius: 15px;
@@ -234,61 +234,264 @@
             padding-bottom: 10px; border-bottom: 3px solid #667eea;
         }
 
-        .tasks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; }
+        /* Grid responsive migliorato */
+        .tasks-grid { 
+            display: grid; 
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
 
         .task-card {
             background: white; border-radius: 10px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.08);
             border-left: 5px solid #667eea; transition: transform 0.3s, box-shadow 0.3s;
+            width: 100%;
+            min-height: 200px;
         }
         .task-card:hover { transform: translateY(-5px); box-shadow: 0 15px 30px rgba(0,0,0,0.15); }
 
-        .task-title { font-size: 1.2rem; font-weight: 600; color: #2c3e50; margin-bottom: 10px; }
-        .task-description { color: #7f8c8d; margin-bottom: 15px; line-height: 1.6; }
-        .task-meta {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 15px; font-size: 0.9rem;
+        .task-title { 
+            font-size: 1.2rem; font-weight: 600; color: #2c3e50; margin-bottom: 10px; 
+            word-wrap: break-word;
+            line-height: 1.3;
         }
-        .task-assignee { color: #34495e; font-weight: 500; }
-        .task-date { color: #7f8c8d; }
+        .task-description { 
+            color: #7f8c8d; margin-bottom: 15px; line-height: 1.6; 
+            word-wrap: break-word;
+        }
+        
+        .task-meta {
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start;
+            margin-bottom: 15px; 
+            font-size: 0.9rem;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .task-assignee { 
+            color: #34495e; font-weight: 500; 
+            word-wrap: break-word;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .task-date { 
+            color: #7f8c8d; 
+            flex-shrink: 0;
+        }
 
         .task-priority {
             padding: 4px 12px; border-radius: 15px; font-size: 0.8rem;
             font-weight: 600; text-transform: uppercase;
+            white-space: nowrap;
         }
         .priority-alta { background: #ffebee; color: #c62828; }
         .priority-media { background: #fff3e0; color: #ef6c00; }
         .priority-bassa { background: #e8f5e8; color: #2e7d32; }
 
-        .task-status { display: flex; align-items: center; gap: 10px; }
+        .task-status { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            flex-wrap: wrap;
+        }
+        
         .status-select {
             padding: 8px 12px; border: 2px solid #e9ecef; border-radius: 6px;
             font-size: 14px; cursor: pointer; transition: border-color 0.3s;
+            flex: 1;
+            min-width: 150px;
         }
         .status-select:focus { outline: none; border-color: #667eea; }
 
+        .delete-btn {
+            background: #e74c3c; 
+            color: white; 
+            border: none; 
+            padding: 8px 12px; 
+            border-radius: 6px; 
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .delete-btn:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
         .stats-section {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px; margin-bottom: 30px;
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px; 
+            margin-bottom: 30px;
         }
 
         .stat-card {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; padding: 20px; border-radius: 10px; text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .stat-number { font-size: 2.5rem; font-weight: 300; margin-bottom: 5px; }
         .stat-label { opacity: 0.9; font-size: 0.9rem; }
 
-        .empty-state { text-align: center; padding: 60px 20px; color: #7f8c8d; }
+        .empty-state { 
+            text-align: center; 
+            padding: 60px 20px; 
+            color: #7f8c8d; 
+            grid-column: 1 / -1;
+        }
 
+        /* Media query per mobile migliorata */
         @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; }
-            .tasks-grid { grid-template-columns: 1fr; }
-            .stats-section { grid-template-columns: repeat(2, 1fr); }
-            .alert-container { left: 20px; right: 20px; max-width: none; }
-            .company-logo { flex-direction: column; gap: 10px; }
-            .logo-text { font-size: 2.2rem; }
-            .task-form { padding: 20px; }
-            .task-form .section-title { font-size: 1.4rem; }
+            body {
+                padding: 10px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+            
+            .task-form {
+                padding: 20px;
+                margin-bottom: 20px;
+            }
+            
+            .task-form .section-title { 
+                font-size: 1.4rem; 
+            }
+            
+            .form-row { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .tasks-grid { 
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .task-card {
+                padding: 15px;
+                min-height: auto;
+            }
+            
+            .task-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+            
+            .task-status {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .status-select {
+                width: 100%;
+                min-width: auto;
+            }
+            
+            .stats-section { 
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            
+            .alert-container { 
+                left: 10px; 
+                right: 10px; 
+                max-width: none; 
+                top: 10px;
+            }
+            
+            .company-logo { 
+                flex-direction: column; 
+                gap: 10px; 
+            }
+            
+            .logo-text { 
+                font-size: 2.2rem; 
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .btn {
+                font-size: 14px;
+                padding: 10px 20px;
+            }
+            
+            .form-group input, 
+            .form-group textarea, 
+            .form-group select {
+                font-size: 16px; /* Previene zoom su iOS */
+            }
+            
+            /* Fix specifici per il layout mobile */
+            .task-title {
+                font-size: 1.1rem;
+            }
+            
+            .task-description {
+                font-size: 0.9rem;
+            }
+            
+            .notification-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .notification-time {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+
+        /* Fix per dispositivi molto piccoli */
+        @media (max-width: 480px) {
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-card {
+                padding: 15px;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+            
+            .task-form {
+                margin-bottom: 15px;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Debug info per sviluppo */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 9999;
+            display: none;
         }
     </style>
 </head>
@@ -307,7 +510,14 @@
         <div class="main-content">
             <div class="alert-container" id="alertContainer"></div>
 
-            <!-- SEZIONE 2: NUOVO COMPITO - POSIZIONATA IN ALTO -->
+            <!-- Debug info (visibile solo in sviluppo) -->
+            <div class="debug-info" id="debugInfo">
+                Tasks: <span id="debugTaskCount">0</span> | 
+                Screen: <span id="debugScreen">-</span> | 
+                Grid: <span id="debugGrid">-</span>
+            </div>
+
+            <!-- SEZIONE NUOVO COMPITO -->
             <div class="task-form">
                 <h2 class="section-title">➕ Nuovo Compito</h2>
                 <p style="margin-bottom: 20px; opacity: 0.9; font-size: 1.1rem;">
@@ -426,7 +636,7 @@
     </div>
 
     <script>
-        // VERSIONE BASE FUNZIONANTE - Gruppo Visconti Task Manager
+        // VERSIONE MOBILE FIXED - Gruppo Visconti Task Manager
         
         // Variabili globali
         let tasks = [];
@@ -449,6 +659,23 @@
             'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
         };
 
+        // Debug info per mobile
+        function updateDebugInfo() {
+            const debugInfo = document.getElementById('debugInfo');
+            const debugTaskCount = document.getElementById('debugTaskCount');
+            const debugScreen = document.getElementById('debugScreen');
+            const debugGrid = document.getElementById('debugGrid');
+            
+            if (debugTaskCount) debugTaskCount.textContent = tasks.length;
+            if (debugScreen) debugScreen.textContent = `${window.innerWidth}x${window.innerHeight}`;
+            if (debugGrid) {
+                const gridElement = document.getElementById('tasksGrid');
+                if (gridElement) {
+                    debugGrid.textContent = window.getComputedStyle(gridElement).gridTemplateColumns;
+                }
+            }
+        }
+
         // Funzioni utility
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -464,6 +691,7 @@
             try {
                 localStorage.setItem('tasks', JSON.stringify(tasks));
                 console.log('✅ Tasks salvati nel localStorage');
+                updateDebugInfo();
             } catch (error) {
                 console.error('❌ Errore salvataggio tasks:', error);
             }
@@ -613,6 +841,8 @@
         function renderTasks() {
             const tasksGrid = document.getElementById('tasksGrid');
             
+            console.log('🔄 Rendering tasks:', tasks.length);
+            
             if (!tasks || tasks.length === 0) {
                 tasksGrid.innerHTML = `
                     <div class="empty-state">
@@ -621,6 +851,7 @@
                         <p>Aggiungi il tuo primo compito utilizzando il form sopra</p>
                     </div>
                 `;
+                updateDebugInfo();
                 return;
             }
 
@@ -652,10 +883,13 @@
                                 </option>`
                             ).join('')}
                         </select>
-                        <button onclick="deleteTask('${task.id}')" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px;">🗑️</button>
+                        <button onclick="deleteTask('${task.id}')" class="delete-btn">🗑️ Elimina</button>
                     </div>
                 </div>
             `).join('');
+            
+            updateDebugInfo();
+            console.log('✅ Tasks renderizzati correttamente');
         }
 
         function updateStats() {
@@ -668,6 +902,8 @@
             document.getElementById('inProgressTasks').textContent = inProgressTasks;
             document.getElementById('completedTasks').textContent = completedTasks;
             document.getElementById('pendingTasks').textContent = pendingTasks;
+            
+            console.log('📊 Stats aggiornate:', { totalTasks, inProgressTasks, completedTasks, pendingTasks });
         }
 
         function addTask(taskData) {
@@ -692,7 +928,10 @@
                 };
                 
                 tasks.push(task);
+                console.log('💾 Salvando task...', task);
                 saveTasks();
+                
+                console.log('🔄 Aggiornando UI...');
                 renderTasks();
                 updateStats();
                 
@@ -700,6 +939,16 @@
                 showAlert('success', 'Compito Creato!', `"${task.title}" assegnato a ${task.assignee}`);
                 addNotification('assigned', 'Nuovo Compito Creato', 
                     `Compito "${task.title}" assegnato a ${task.assignee}`, task.id);
+                
+                // Scroll verso la sezione tasks su mobile
+                if (window.innerWidth <= 768) {
+                    setTimeout(() => {
+                        const tasksSection = document.querySelector('.tasks-section');
+                        if (tasksSection) {
+                            tasksSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    }, 100);
+                }
                 
                 return task;
                 
@@ -719,6 +968,8 @@
                 saveTasks();
                 renderTasks();
                 updateStats();
+                
+                console.log(`🔄 Status aggiornato per "${task.title}": ${oldStatus} → ${newStatus}`);
                 
                 if (newStatus === 'completato' && oldStatus !== 'completato') {
                     addNotification('completed', 'Compito Completato!', 
@@ -745,6 +996,7 @@
                     updateStats();
                     renderNotifications();
                     
+                    console.log(`🗑️ Compito eliminato: "${taskTitle}"`);
                     showAlert('info', 'Compito Eliminato', `"${taskTitle}" eliminato`);
                     
                 } catch (error) {
@@ -828,6 +1080,8 @@
         // Inizializzazione
         function initializeApp() {
             try {
+                console.log('🚀 Inizializzazione Gruppo Visconti Task Manager (Mobile Fixed)...');
+                
                 // Carica dati dal localStorage
                 const savedTasks = localStorage.getItem('tasks');
                 const savedNotifications = localStorage.getItem('notifications');
@@ -847,9 +1101,13 @@
                 renderTasks();
                 updateStats();
                 renderNotifications();
+                updateDebugInfo();
                 
                 // Setup form
                 setupFormHandler();
+                
+                // Setup eventi window per debug
+                window.addEventListener('resize', updateDebugInfo);
                 
                 // Controlla scadenze dopo 3 secondi
                 setTimeout(() => {
@@ -858,6 +1116,12 @@
                 
                 console.log('🎯 App inizializzata correttamente!');
                 showAlert('success', 'App Caricata!', 'Gruppo Visconti Task Manager pronto all\'uso');
+                
+                // Abilita debug info in development (rimuovere in produzione)
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    const debugInfo = document.getElementById('debugInfo');
+                    if (debugInfo) debugInfo.style.display = 'block';
+                }
                 
             } catch (error) {
                 console.error('❌ Errore inizializzazione:', error);
@@ -926,6 +1190,13 @@
             console.log('✅ Form handler configurato correttamente');
         }
 
+        // Funzioni globali per gli onclick
+        window.updateTaskStatus = updateTaskStatus;
+        window.deleteTask = deleteTask;
+        window.closeAlert = closeAlert;
+        window.exportToExcel = exportToExcel;
+        window.checkDeadlines = checkDeadlines;
+
         // Avvio applicazione
         document.addEventListener('DOMContentLoaded', function() {
             console.log('🚀 Inizializzazione Gruppo Visconti Task Manager...');
@@ -933,9 +1204,10 @@
         });
 
         // Info per console
-        console.log('📱 Gruppo Visconti Task Manager - Versione Base');
-        console.log('🎯 Form posizionato in alto come richiesto');
-        console.log('✅ Versione stabile e funzionante');
+        console.log('📱 Gruppo Visconti Task Manager - Versione Mobile Fixed');
+        console.log('🎯 Miglioramenti mobile implementati');
+        console.log('🔍 Debug info disponibile in development');
+        console.log('✅ Layout responsive ottimizzato');
     </script>
 </body>
 </html>
