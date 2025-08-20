@@ -106,59 +106,6 @@
             font-size: 1.1rem;
         }
 
-        .sync-container {
-            position: absolute;
-            top: 10px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .sync-indicator {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-weight: 600;
-            min-width: 80px;
-            text-align: center;
-            transition: all 0.3s;
-        }
-        
-        .sync-success {
-            background: rgba(39, 174, 96, 0.2);
-            color: #27ae60;
-            border: 1px solid rgba(39, 174, 96, 0.3);
-        }
-        
-        .sync-error {
-            background: rgba(231, 76, 60, 0.2);
-            color: #e74c3c;
-            border: 1px solid rgba(231, 76, 60, 0.3);
-        }
-        
-        .sync-pending {
-            background: rgba(241, 196, 15, 0.2);
-            color: #f1c40f;
-            border: 1px solid rgba(241, 196, 15, 0.3);
-        }
-
-        .sync-btn {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-
-        .sync-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateY(-1px);
-        }
-
         .main-content {
             padding: 30px;
         }
@@ -207,6 +154,7 @@
 
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
+        /* Form per nuovo compito - SPOSTATO IN ALTO */
         .task-form {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white; padding: 30px; margin-bottom: 30px; border-radius: 15px;
@@ -263,14 +211,6 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
         }
         .btn-purple:hover { background: #9b59b6; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(155, 89, 182, 0.3); }
-
-        .quick-date-buttons { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-        .quick-date-btn {
-            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
-            color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .quick-date-btn:hover { background: rgba(255,255,255,0.3); }
 
         .notifications-section {
             background: #f8f9fa; padding: 20px; border-radius: 10px;
@@ -340,11 +280,6 @@
 
         .empty-state { text-align: center; padding: 60px 20px; color: #7f8c8d; }
 
-        .mobile-device .task-card {
-            position: relative;
-            transition: transform 0.3s ease, background-color 0.3s ease;
-        }
-
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
             .tasks-grid { grid-template-columns: 1fr; }
@@ -354,10 +289,6 @@
             .logo-text { font-size: 2.2rem; }
             .task-form { padding: 20px; }
             .task-form .section-title { font-size: 1.4rem; }
-            .sync-container {
-                position: relative !important; top: auto !important; right: auto !important;
-                justify-content: center; margin-top: 15px;
-            }
         }
     </style>
 </head>
@@ -371,11 +302,6 @@
             <div class="tagline">Join the ReEvolution</div>
             <h1>📋 Gestore Compiti</h1>
             <p>Organizza, monitora e traccia tutti i tuoi compiti in modo efficiente</p>
-            
-            <div class="sync-container">
-                <div id="syncIndicator" class="sync-indicator"></div>
-                <button id="forceSyncBtn" class="sync-btn">🔄 Sync</button>
-            </div>
         </div>
 
         <div class="main-content">
@@ -500,13 +426,12 @@
     </div>
 
     <script>
-        // GRUPPO VISCONTI TASK MANAGER v2.1.0 - VERSIONE COMPLETA E FUNZIONANTE
+        // VERSIONE BASE FUNZIONANTE - Gruppo Visconti Task Manager
         
         // Variabili globali
         let tasks = [];
         let notifications = [];
         let alertCounter = 0;
-        let cloudSync, mobileOptimizer;
 
         // Configurazioni
         const taskStates = {
@@ -524,7 +449,7 @@
             'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
         };
 
-        // FUNZIONI UTILITY
+        // Funzioni utility
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
@@ -538,16 +463,18 @@
         function saveTasks() {
             try {
                 localStorage.setItem('tasks', JSON.stringify(tasks));
+                console.log('✅ Tasks salvati nel localStorage');
             } catch (error) {
-                console.error('Errore salvataggio tasks:', error);
+                console.error('❌ Errore salvataggio tasks:', error);
             }
         }
 
         function saveNotifications() {
             try {
                 localStorage.setItem('notifications', JSON.stringify(notifications));
+                console.log('✅ Notifications salvate nel localStorage');
             } catch (error) {
-                console.error('Errore salvataggio notifications:', error);
+                console.error('❌ Errore salvataggio notifications:', error);
             }
         }
 
@@ -614,7 +541,6 @@
             return '';
         }
 
-        // FUNZIONI PRINCIPALI
         function addNotification(type, title, message, taskId = null) {
             const notification = {
                 id: generateId(),
@@ -622,3 +548,394 @@
                 title: title,
                 message: message,
                 taskId: taskId,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            notifications.unshift(notification);
+            
+            if (notifications.length > 50) {
+                notifications = notifications.slice(0, 50);
+            }
+            
+            saveNotifications();
+            renderNotifications();
+            
+            const icons = {
+                'deadline': '⏰',
+                'overdue': '🚨',
+                'completed': '✅',
+                'assigned': '📋',
+                'reminder': '🔔',
+                'info': 'ℹ️'
+            };
+            
+            showAlert(
+                type === 'overdue' ? 'danger' : 
+                type === 'deadline' ? 'warning' : 
+                type === 'completed' ? 'success' : 'info',
+                `${icons[type] || '🔔'} ${title}`,
+                message
+            );
+        }
+
+        function renderNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+            
+            if (notifications.length === 0) {
+                notificationsList.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div style="font-size: 2rem; margin-bottom: 10px;">🔔</div>
+                        <p style="margin: 0;">Nessuna notifica al momento</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const icons = {
+                'deadline': '⏰', 'overdue': '🚨', 'completed': '✅',
+                'assigned': '📋', 'reminder': '🔔', 'info': 'ℹ️'
+            };
+
+            notificationsList.innerHTML = notifications.slice(0, 10).map(notif => `
+                <div class="notification-item">
+                    <div class="notification-icon">${icons[notif.type] || '🔔'}</div>
+                    <div class="notification-content">
+                        <div class="notification-title">${notif.title}</div>
+                        <div class="notification-text">${notif.message}</div>
+                    </div>
+                    <div class="notification-time">${getTimeAgo(notif.timestamp)}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderTasks() {
+            const tasksGrid = document.getElementById('tasksGrid');
+            
+            if (!tasks || tasks.length === 0) {
+                tasksGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">📋</div>
+                        <h3>Nessun compito presente</h3>
+                        <p>Aggiungi il tuo primo compito utilizzando il form sopra</p>
+                    </div>
+                `;
+                return;
+            }
+
+            tasksGrid.innerHTML = tasks.map(task => `
+                <div class="task-card" data-task-id="${task.id}">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-description">${task.description || 'Nessuna descrizione'}</div>
+                    
+                    <div class="task-meta">
+                        <div class="task-assignee">👤 ${task.assignee}</div>
+                        <div class="task-date">
+                            ${formatDate(task.dueDate) || 'Nessuna scadenza'}
+                            ${getDueBadge(task.dueDate)}
+                        </div>
+                    </div>
+                    
+                    <div class="task-meta">
+                        <div class="task-priority ${priorities[task.priority].class}">
+                            ${priorities[task.priority].label}
+                        </div>
+                        <div class="task-date">Creato: ${formatDate(task.createdAt?.split('T')[0])}</div>
+                    </div>
+                    
+                    <div class="task-status">
+                        <select class="status-select" onchange="updateTaskStatus('${task.id}', this.value)">
+                            ${Object.keys(taskStates).map(state => 
+                                `<option value="${state}" ${task.status === state ? 'selected' : ''}>
+                                    ${taskStates[state].label}
+                                </option>`
+                            ).join('')}
+                        </select>
+                        <button onclick="deleteTask('${task.id}')" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; margin-left: 10px;">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const inProgressTasks = tasks.filter(t => t.status === 'in-corso').length;
+            const completedTasks = tasks.filter(t => t.status === 'completato').length;
+            const pendingTasks = tasks.filter(t => t.status === 'da-iniziare').length;
+
+            document.getElementById('totalTasks').textContent = totalTasks;
+            document.getElementById('inProgressTasks').textContent = inProgressTasks;
+            document.getElementById('completedTasks').textContent = completedTasks;
+            document.getElementById('pendingTasks').textContent = pendingTasks;
+        }
+
+        function addTask(taskData) {
+            try {
+                console.log('🚀 Aggiunta compito:', taskData);
+                
+                if (!taskData.title || !taskData.assignee) {
+                    throw new Error('Titolo e Assegnato sono obbligatori');
+                }
+                
+                const task = {
+                    id: generateId(),
+                    title: String(taskData.title).trim(),
+                    description: String(taskData.description || '').trim(),
+                    assignee: String(taskData.assignee).trim(),
+                    priority: taskData.priority || 'media',
+                    dueDate: taskData.dueDate || '',
+                    status: taskData.status || 'da-iniziare',
+                    reminderEnabled: Boolean(taskData.reminderEnabled),
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                
+                tasks.push(task);
+                saveTasks();
+                renderTasks();
+                updateStats();
+                
+                console.log('✅ Compito aggiunto con successo!');
+                showAlert('success', 'Compito Creato!', `"${task.title}" assegnato a ${task.assignee}`);
+                addNotification('assigned', 'Nuovo Compito Creato', 
+                    `Compito "${task.title}" assegnato a ${task.assignee}`, task.id);
+                
+                return task;
+                
+            } catch (error) {
+                console.error('❌ Errore aggiunta compito:', error);
+                showAlert('danger', 'Errore!', error.message || 'Impossibile aggiungere il compito');
+                return null;
+            }
+        }
+
+        function updateTaskStatus(taskId, newStatus) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                const oldStatus = task.status;
+                task.status = newStatus;
+                task.updatedAt = new Date().toISOString();
+                saveTasks();
+                renderTasks();
+                updateStats();
+                
+                if (newStatus === 'completato' && oldStatus !== 'completato') {
+                    addNotification('completed', 'Compito Completato!', 
+                        `Il compito "${task.title}" è stato completato`, task.id);
+                } else if (newStatus === 'in-corso' && oldStatus === 'da-iniziare') {
+                    addNotification('reminder', 'Compito Iniziato', 
+                        `Il lavoro su "${task.title}" è iniziato`, task.id);
+                }
+            }
+        }
+
+        function deleteTask(taskId) {
+            if (confirm('Sei sicuro di voler eliminare questo compito?')) {
+                try {
+                    const taskToDelete = tasks.find(t => t.id === taskId);
+                    const taskTitle = taskToDelete ? taskToDelete.title : 'Compito sconosciuto';
+                    
+                    tasks = tasks.filter(t => t.id !== taskId);
+                    notifications = notifications.filter(n => n.taskId !== taskId);
+                    
+                    saveTasks();
+                    saveNotifications();
+                    renderTasks();
+                    updateStats();
+                    renderNotifications();
+                    
+                    showAlert('info', 'Compito Eliminato', `"${taskTitle}" eliminato`);
+                    
+                } catch (error) {
+                    console.error('❌ Errore eliminazione:', error);
+                    showAlert('danger', 'Errore!', 'Impossibile eliminare il compito');
+                }
+            }
+        }
+
+        function checkDeadlines() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            let overdueCount = 0;
+            let todayCount = 0;
+            let soonCount = 0;
+            
+            tasks.forEach(task => {
+                if (!task.dueDate || task.status === 'completato' || task.status === 'annullato') return;
+                
+                const due = new Date(task.dueDate);
+                due.setHours(0, 0, 0, 0);
+                const diffTime = due - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 0) {
+                    overdueCount++;
+                    addNotification('overdue', 'Compito Scaduto!', 
+                        `Il compito "${task.title}" è scaduto da ${Math.abs(diffDays)} giorni`, task.id);
+                } else if (diffDays === 0) {
+                    todayCount++;
+                    addNotification('deadline', 'Scadenza Oggi!', 
+                        `Il compito "${task.title}" scade oggi`, task.id);
+                } else if (diffDays <= 3) {
+                    soonCount++;
+                    addNotification('reminder', 'Scadenza Imminente', 
+                        `Il compito "${task.title}" scade tra ${diffDays} giorni`, task.id);
+                }
+            });
+            
+            if (overdueCount === 0 && todayCount === 0 && soonCount === 0) {
+                showAlert('success', 'Tutto OK!', 'Non ci sono compiti in scadenza');
+            } else {
+                const summary = [];
+                if (overdueCount > 0) summary.push(`${overdueCount} scaduti`);
+                if (todayCount > 0) summary.push(`${todayCount} scadono oggi`);
+                if (soonCount > 0) summary.push(`${soonCount} in scadenza presto`);
+                
+                showAlert('warning', 'Riepilogo Scadenze', summary.join(', '));
+            }
+        }
+
+        function exportToExcel() {
+            if (tasks.length === 0) {
+                alert('Non ci sono compiti da esportare!');
+                return;
+            }
+
+            const worksheet_data = tasks.map(task => ({
+                'ID': task.id,
+                'Titolo': task.title,
+                'Descrizione': task.description || '',
+                'Assegnato a': task.assignee,
+                'Priorità': priorities[task.priority].label,
+                'Stato': taskStates[task.status].label,
+                'Scadenza': formatDate(task.dueDate) || '',
+                'Data Creazione': formatDate(task.createdAt?.split('T')[0]),
+                'Ultimo Aggiornamento': formatDate(task.updatedAt?.split('T')[0])
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(worksheet_data);
+            XLSX.utils.book_append_sheet(wb, ws, "Compiti");
+            
+            const filename = `compiti_gruppo_visconti_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+            
+            showAlert('success', 'Export Completato!', `File ${filename} scaricato`);
+        }
+
+        // Inizializzazione
+        function initializeApp() {
+            try {
+                // Carica dati dal localStorage
+                const savedTasks = localStorage.getItem('tasks');
+                const savedNotifications = localStorage.getItem('notifications');
+                
+                if (savedTasks) {
+                    tasks = JSON.parse(savedTasks) || [];
+                }
+                if (savedNotifications) {
+                    notifications = JSON.parse(savedNotifications) || [];
+                }
+
+                console.log('✅ Dati caricati dal localStorage');
+                console.log('📊 Tasks caricati:', tasks.length);
+                console.log('🔔 Notifiche caricate:', notifications.length);
+                
+                // Inizializza interfaccia
+                renderTasks();
+                updateStats();
+                renderNotifications();
+                
+                // Setup form
+                setupFormHandler();
+                
+                // Controlla scadenze dopo 3 secondi
+                setTimeout(() => {
+                    checkDeadlines();
+                }, 3000);
+                
+                console.log('🎯 App inizializzata correttamente!');
+                showAlert('success', 'App Caricata!', 'Gruppo Visconti Task Manager pronto all\'uso');
+                
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+                showAlert('danger', 'Errore!', 'Problema nell\'inizializzazione dell\'app');
+            }
+        }
+
+        function setupFormHandler() {
+            const taskForm = document.getElementById('taskForm');
+            if (!taskForm) {
+                console.error('❌ Form non trovato!');
+                return;
+            }
+            
+            console.log('🔧 Configurazione form handler...');
+            
+            taskForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                console.log('📝 Form sottomesso');
+                
+                try {
+                    const formData = {
+                        title: document.getElementById('taskTitle').value.trim(),
+                        description: document.getElementById('taskDescription').value.trim(),
+                        assignee: document.getElementById('taskAssignee').value.trim(),
+                        priority: document.getElementById('taskPriority').value,
+                        dueDate: document.getElementById('taskDueDate').value,
+                        status: document.getElementById('taskStatus').value,
+                        reminderEnabled: document.getElementById('enableReminder').checked
+                    };
+                    
+                    console.log('📦 Dati form:', formData);
+                    
+                    if (!formData.title || !formData.assignee) {
+                        throw new Error('Titolo e Assegnato sono obbligatori');
+                    }
+                    
+                    const result = addTask(formData);
+                    
+                    if (result) {
+                        // Reset form
+                        this.reset();
+                        console.log('✅ Form resettato');
+                        
+                        // Feedback visivo
+                        const submitBtn = this.querySelector('button[type="submit"]');
+                        if (submitBtn) {
+                            const originalText = submitBtn.textContent;
+                            submitBtn.textContent = '✅ Compito Aggiunto!';
+                            submitBtn.style.background = 'rgba(39, 174, 96, 0.9)';
+                            
+                            setTimeout(() => {
+                                submitBtn.textContent = originalText;
+                                submitBtn.style.background = '';
+                            }, 2000);
+                        }
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Errore form:', error);
+                    showAlert('danger', 'Errore!', error.message);
+                }
+            });
+            
+            console.log('✅ Form handler configurato correttamente');
+        }
+
+        // Avvio applicazione
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Inizializzazione Gruppo Visconti Task Manager...');
+            initializeApp();
+        });
+
+        // Info per console
+        console.log('📱 Gruppo Visconti Task Manager - Versione Base');
+        console.log('🎯 Form posizionato in alto come richiesto');
+        console.log('✅ Versione stabile e funzionante');
+    </script>
+</body>
+</html>
