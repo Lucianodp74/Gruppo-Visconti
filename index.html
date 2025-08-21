@@ -176,69 +176,86 @@
         function addTask(event) {
             event.preventDefault();
             
-            var title = document.getElementById('taskTitle').value.trim();
-            var description = document.getElementById('taskDescription').value.trim();
-            var assigneeSelect = document.getElementById('taskAssignee');
-            var selectedAssignees = [];
-            
-            for (var i = 0; i < assigneeSelect.options.length; i++) {
-                if (assigneeSelect.options[i].selected) {
-                    selectedAssignees.push(assigneeSelect.options[i].value);
+            try {
+                var title = document.getElementById('taskTitle').value.trim();
+                var description = document.getElementById('taskDescription').value.trim();
+                var assigneeSelect = document.getElementById('taskAssignee');
+                var selectedAssignees = [];
+                
+                // Verifica che gli elementi esistano
+                if (!assigneeSelect) {
+                    showAlert('danger', 'Errore', 'Elemento assegnatario non trovato');
+                    return;
                 }
-            }
-            
-            var priority = document.getElementById('taskPriority').value;
-            var dueDate = document.getElementById('taskDueDate').value;
-            var status = document.getElementById('taskStatus').value;
-            var selectedTags = document.getElementById('selectedTags').value;
-            var enableReminder = document.getElementById('enableReminder').checked;
-            
-            if (!title || selectedAssignees.length === 0) {
-                showAlert('danger', 'Errore', 'Inserisci almeno il titolo e seleziona un assegnatario');
-                return;
-            }
-            
-            var task = {
-                id: taskManager.editingTaskId || generateId(),
-                title: title,
-                description: description,
-                assignee: selectedAssignees,
-                priority: priority,
-                dueDate: dueDate,
-                status: status,
-                tags: selectedTags ? selectedTags.split(',') : [],
-                enableReminder: enableReminder,
-                createdAt: taskManager.editingTaskId ? 
-                    (taskManager.tasks.find(function(t) { return t.id === taskManager.editingTaskId; }) || {}).createdAt || new Date().toISOString()
-                    : new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                createdBy: taskManager.currentUser
-            };
-            
-            if (taskManager.editingTaskId) {
-                var taskIndex = taskManager.tasks.findIndex(function(t) { return t.id === taskManager.editingTaskId; });
-                if (taskIndex !== -1) {
-                    taskManager.tasks[taskIndex] = task;
-                    showAlert('success', 'Compito Aggiornato', 'Il compito è stato aggiornato con successo');
-                    addNotification('info', 'Compito Modificato', 'Il compito "' + task.title + '" è stato aggiornato', task.id);
+                
+                for (var i = 0; i < assigneeSelect.options.length; i++) {
+                    if (assigneeSelect.options[i].selected) {
+                        selectedAssignees.push(assigneeSelect.options[i].value);
+                    }
+                }
+                
+                var priority = document.getElementById('taskPriority').value;
+                var dueDate = document.getElementById('taskDueDate').value;
+                var status = document.getElementById('taskStatus').value;
+                var selectedTags = document.getElementById('selectedTags').value;
+                var enableReminder = document.getElementById('enableReminder').checked;
+                
+                if (!title || selectedAssignees.length === 0) {
+                    showAlert('danger', 'Errore', 'Inserisci almeno il titolo e seleziona un assegnatario');
+                    return;
+                }
+                
+                console.log('Creando task con:', { title, selectedAssignees, priority, status });
+                
+                var task = {
+                    id: taskManager.editingTaskId || generateId(),
+                    title: title,
+                    description: description,
+                    assignee: selectedAssignees,
+                    priority: priority,
+                    dueDate: dueDate,
+                    status: status,
+                    tags: selectedTags ? selectedTags.split(',') : [],
+                    enableReminder: enableReminder,
+                    createdAt: taskManager.editingTaskId ? 
+                        (taskManager.tasks.find(function(t) { return t.id === taskManager.editingTaskId; }) || {}).createdAt || new Date().toISOString()
+                        : new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: taskManager.currentUser
+                };
+                
+                console.log('Task creato:', task);
+                
+                if (taskManager.editingTaskId) {
+                    var taskIndex = taskManager.tasks.findIndex(function(t) { return t.id === taskManager.editingTaskId; });
+                    if (taskIndex !== -1) {
+                        taskManager.tasks[taskIndex] = task;
+                        showAlert('success', 'Compito Aggiornato', 'Il compito è stato aggiornato con successo');
+                        addNotification('info', 'Compito Modificato', 'Il compito "' + task.title + '" è stato aggiornato', task.id);
+                    } else {
+                        taskManager.tasks.push(task);
+                        showAlert('success', 'Compito Aggiunto', 'Il compito è stato creato con successo');
+                    }
+                    taskManager.editingTaskId = null;
                 } else {
                     taskManager.tasks.push(task);
-                    showAlert('success', 'Compito Aggiunto', 'Il compito è stato creato con successo');
+                    console.log('Tasks totali dopo aggiunta:', taskManager.tasks.length);
+                    showAlert('success', 'Compito Aggiunto', 'Il compito "' + title + '" è stato creato con successo');
+                    addNotification('assigned', 'Nuovo Compito Creato', 
+                        'Il compito "' + task.title + '" è stato assegnato a ' + selectedAssignees.join(', '), task.id);
                 }
-                taskManager.editingTaskId = null;
-            } else {
-                taskManager.tasks.push(task);
-                showAlert('success', 'Compito Aggiunto', 'Il compito è stato creato con successo');
-                addNotification('assigned', 'Nuovo Compito Creato', 
-                    'Il compito "' + task.title + '" è stato assegnato a ' + selectedAssignees.join(', '), task.id);
                 
-                setTimeout(function() { showNotificationModal(task.title, selectedAssignees); }, 1000);
+                saveData();
+                resetForm();
+                renderCurrentView();
+                updateStats();
+                
+                console.log('Task aggiunto con successo, tasks totali:', taskManager.tasks.length);
+                
+            } catch (error) {
+                console.error('Errore in addTask:', error);
+                showAlert('danger', 'Errore', 'Si è verificato un errore durante la creazione del compito: ' + error.message);
             }
-            
-            saveData();
-            resetForm();
-            renderCurrentView();
-            updateStats();
         }
 
         function resetForm() {
@@ -787,58 +804,118 @@
             }
         }
 
-        function addSampleTasks() {
-            var sampleTasks = [
-                {
+        // Funzione di debug per verificare lo stato dell'app
+        function debugApp() {
+            console.log('=== DEBUG TASK MANAGER ===');
+            console.log('Tasks totali:', taskManager.tasks.length);
+            console.log('Tasks:', taskManager.tasks);
+            console.log('Current view:', taskManager.currentView);
+            console.log('Filtri attivi:', taskManager.filters);
+            console.log('Filtered tasks:', getFilteredTasks().length);
+            console.log('=========================');
+            
+            showAlert('info', 'Debug Info', 
+                'Tasks: ' + taskManager.tasks.length + ' | Vista: ' + taskManager.currentView + ' | Filtrati: ' + getFilteredTasks().length);
+        }
+
+        // Funzione semplificata per aggiungere un task di test
+        function addTestTask() {
+            try {
+                var testTask = {
                     id: generateId(),
-                    title: 'Preparare presentazione Q4',
-                    description: 'Creare slides per la presentazione dei risultati del quarto trimestre',
-                    assignee: ['LUCIANO', 'ANTONIO'],
-                    priority: 'alta',
-                    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    status: 'in-corso',
-                    tags: ['Urgente', 'Cliente'],
-                    enableReminder: true,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    createdBy: 'Admin'
-                },
-                {
-                    id: generateId(),
-                    title: 'Aggiornare il sito web aziendale',
-                    description: 'Implementare le nuove funzionalità richieste dal cliente',
-                    assignee: ['LUIGI', 'DARIO'],
+                    title: 'Task di Test - ' + new Date().getTime(),
+                    description: 'Questo è un task di test creato automaticamente',
+                    assignee: ['LUCIANO'],
                     priority: 'media',
-                    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    dueDate: '',
                     status: 'da-iniziare',
-                    tags: ['Sviluppo', 'Cliente'],
+                    tags: ['Test'],
                     enableReminder: false,
                     createdAt: new Date().toISOString(),
                     updatedAt: new Date().toISOString(),
-                    createdBy: 'Admin'
-                },
-                {
-                    id: generateId(),
-                    title: 'Campagna marketing sui social',
-                    description: 'Pianificare e lanciare la nuova campagna promozionale',
-                    assignee: ['NOEMI'],
-                    priority: 'media',
-                    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    status: 'completato',
-                    tags: ['Marketing', 'Interno'],
-                    enableReminder: false,
-                    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    createdBy: 'Admin'
-                }
-            ];
-            
-            taskManager.tasks = taskManager.tasks.concat(sampleTasks);
-            saveData();
-            renderCurrentView();
-            updateStats();
-            
-            showAlert('success', 'Dati Demo Aggiunti', 'Sono stati aggiunti alcuni compiti di esempio');
+                    createdBy: 'Sistema'
+                };
+                
+                taskManager.tasks.push(testTask);
+                console.log('Task di test aggiunto:', testTask);
+                console.log('Tasks totali:', taskManager.tasks.length);
+                
+                saveData();
+                renderCurrentView();
+                updateStats();
+                
+                showAlert('success', 'Test Task Aggiunto', 'Task di test creato con successo!');
+                
+            } catch (error) {
+                console.error('Errore nel test task:', error);
+                showAlert('danger', 'Errore Test', 'Errore nella creazione del task di test: ' + error.message);
+            }
+        }
+
+        function addSampleTasks() {
+            try {
+                console.log('Aggiungendo dati demo...');
+                
+                var sampleTasks = [
+                    {
+                        id: generateId(),
+                        title: 'Preparare presentazione Q4',
+                        description: 'Creare slides per la presentazione dei risultati del quarto trimestre',
+                        assignee: ['LUCIANO', 'ANTONIO'],
+                        priority: 'alta',
+                        dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'in-corso',
+                        tags: ['Urgente', 'Cliente'],
+                        enableReminder: true,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        createdBy: 'Admin'
+                    },
+                    {
+                        id: generateId(),
+                        title: 'Aggiornare il sito web aziendale',
+                        description: 'Implementare le nuove funzionalità richieste dal cliente',
+                        assignee: ['LUIGI', 'DARIO'],
+                        priority: 'media',
+                        dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'da-iniziare',
+                        tags: ['Sviluppo', 'Cliente'],
+                        enableReminder: false,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        createdBy: 'Admin'
+                    },
+                    {
+                        id: generateId(),
+                        title: 'Campagna marketing sui social',
+                        description: 'Pianificare e lanciare la nuova campagna promozionale',
+                        assignee: ['NOEMI'],
+                        priority: 'media',
+                        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                        status: 'completato',
+                        tags: ['Marketing', 'Interno'],
+                        enableReminder: false,
+                        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        createdBy: 'Admin'
+                    }
+                ];
+                
+                console.log('Tasks demo da aggiungere:', sampleTasks);
+                
+                taskManager.tasks = taskManager.tasks.concat(sampleTasks);
+                console.log('Tasks totali dopo aggiunta demo:', taskManager.tasks.length);
+                
+                saveData();
+                renderCurrentView();
+                updateStats();
+                
+                showAlert('success', 'Dati Demo Aggiunti', 'Sono stati aggiunti ' + sampleTasks.length + ' compiti di esempio');
+                
+            } catch (error) {
+                console.error('Errore in addSampleTasks:', error);
+                showAlert('danger', 'Errore Demo', 'Errore nell\'aggiunta dei dati demo: ' + error.message);
+            }
         }
 
         function init() {
@@ -889,7 +966,11 @@
             saveData();
         });
 
+        // Esponi funzioni per debug e test
         window.addDemoData = addSampleTasks;
+        window.addTestTask = addTestTask;
+        window.debugApp = debugApp;
+        window.taskManager = taskManager;
     </script>
 </body>
 </html><!DOCTYPE html>
