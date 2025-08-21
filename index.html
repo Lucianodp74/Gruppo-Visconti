@@ -1,4 +1,898 @@
-<!DOCTYPE html>
+<script>
+        var taskManager = {
+            tasks: [],
+            notifications: [],
+            alertCounter: 0,
+            currentUser: 'Admin',
+            teamMembers: ['LUCIANO', 'ANTONIO', 'LUIGI', 'DARIO', 'NOEMI', 'VINCENZO', 'ROBERTO', 'MARIANO'],
+            currentView: 'lista',
+            editingTaskId: null,
+            filters: { assignee: 'tutti', priority: 'tutte', status: 'tutti', tags: [] },
+            taskStates: {
+                'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
+                'in-corso': { label: '🚀 In Corso', class: 'status-in-corso' },
+                'in-revisione': { label: '👁️ In Revisione', class: 'status-in-revisione' },
+                'completato': { label: '✅ Completato', class: 'status-completato' },
+                'in-pausa': { label: '⏸️ In Pausa', class: 'status-in-pausa' },
+                'annullato': { label: '❌ Annullato', class: 'status-annullato' }
+            },
+            priorities: {
+                'alta': { label: '🔴 Alta', class: 'priority-alta' },
+                'media': { label: '🟡 Media', class: 'priority-media' },
+                'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
+            }
+        };
+
+        var teamContacts = {
+            'LUCIANO': { email: 'luciano@gruppovisconti.it', whatsapp: '+393331111111' },
+            'ANTONIO': { email: 'antonio@gruppovisconti.it', whatsapp: '+393332222222' },
+            'LUIGI': { email: 'luigi@gruppovisconti.it', whatsapp: '+393333333333' },
+            'DARIO': { email: 'dario@gruppovisconti.it', whatsapp: '+393334444444' },
+            'NOEMI': { email: 'noemi@gruppovisconti.it', whatsapp: '+393335555555' },
+            'VINCENZO': { email: 'vincenzo@gruppovisconti.it', whatsapp: '+393336666666' },
+            'ROBERTO': { email: 'roberto@gruppovisconti.it', whatsapp: '+393337777777' },
+            'MARIANO': { email: 'mariano@gruppovisconti.it', whatsapp: '+393338888888' }
+        };
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            var date = new Date(dateString);
+            return date.toLocaleDateString('it-IT');
+        }
+
+        function saveData() {
+            try {
+                var data = { tasks: taskManager.tasks, notifications: taskManager.notifications, lastSaved: new Date().toISOString() };
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    storage.setItem('gruppoViscontiTasks', JSON.stringify(data));
+                    console.log('✅ Dati salvati con successo');
+                }
+            } catch (error) {
+                console.error('❌ Errore salvataggio:', error);
+            }
+        }
+
+        function loadData() {
+            try {
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    var savedData = storage.getItem('gruppoViscontiTasks');
+                    if (savedData) {
+                        var data = JSON.parse(savedData);
+                        taskManager.tasks = data.tasks || [];
+                        taskManager.notifications = data.notifications || [];
+                        console.log('✅ Dati caricati: ' + taskManager.tasks.length + ' tasks');
+                        return true;
+                    }
+                }
+                return false;
+            } catch (error) {
+                console.error('❌ Errore caricamento:', error);
+                taskManager.tasks = [];
+                taskManager.notifications = [];
+                return false;
+            }
+        }
+
+        function showAlert(type, title, message, duration) {
+            duration = duration || 5000;
+            taskManager.alertCounter++;
+            var alertId = 'alert-' + taskManager.alertCounter;
+            
+            var alertElement = document.createElement('div');
+            alertElement.id = alertId;
+            alertElement.className = 'alert alert-' + type;
+            alertElement.innerHTML = 
+                '<button class="alert-close" onclick="closeAlert(\'' + alertId + '\')">&times;</button>' +
+                '<div class="alert-title">' + title + '</div>' +
+                '<div class="alert-message">' + message + '</div>';
+            
+            document.getElementById('alertContainer').appendChild(alertElement);
+            setTimeout(function() { closeAlert(alertId); }, duration);
+        }
+
+        function closeAlert(alertId) {
+            var alert = document.getElementById(alertId);
+            if (alert && alert.parentNode) {
+                alert.parentNode.removeChild(alert);
+            }
+        }
+
+        function getTimeAgo(timestamp) {
+            var now = new Date();
+            var time = new Date(timestamp);
+            var diffMs = now - time;
+            var diffMins = Math.floor(diffMs / 60000);
+            var diffHours = Math.floor(diffMs / 3600000);
+            var diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Ora';
+            if (diffMins < 60) return diffMins + 'm fa';
+            if (diffHours < 24) return diffHours + 'h fa';
+            return diffDays + 'g fa';
+        }
+
+        function addNotification(type, title, message, taskId) {
+            var notification = {
+                id: generateId(),
+                type: type,
+                title: title,
+                message: message,
+                taskId: taskId || null,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            taskManager.notifications.unshift(notification);
+            if (taskManager.notifications.length > 50) {
+                taskManager.notifications = taskManager.notifications.slice(0, 50);
+            }
+            
+            saveData();
+            renderNotifications();
+            
+            var alertType = type === 'overdue' ? 'danger' : 
+                           type === 'deadline' ? 'warning' : 
+                           type === 'completed' ? 'success' : 'info';
+            
+            showAlert(alertType, title, message);
+        }
+
+        function renderNotifications() {
+            var notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+            
+            if (taskManager.notifications.length === 0) {
+                notificationsList.innerHTML = 
+                    '<div class="empty-state"><div style="font-size: 2rem; margin-bottom: 10px;">🔔</div>' +
+                    '<p>Nessuna notifica al momento</p></div>';
+                return;
+            }
+
+            var icons = { 'deadline': '⏰', 'overdue': '🚨', 'completed': '✅', 'assigned': '📋', 'info': 'ℹ️' };
+            var html = '';
+            var displayNotifications = taskManager.notifications.slice(0, 10);
+            
+            for (var i = 0; i < displayNotifications.length; i++) {
+                var notif = displayNotifications[i];
+                html += '<div class="notification-item">' +
+                    '<div class="notification-icon">' + (icons[notif.type] || '🔔') + '</div>' +
+                    '<div class="notification-content">' +
+                    '<div class="notification-title">' + notif.title + '</div>' +
+                    '<div class="notification-text">' + notif.message + '</div>' +
+                    '</div>' +
+                    '<div class="notification-time">' + getTimeAgo(notif.timestamp) + '</div>' +
+                    '</div>';
+            }
+            
+            notificationsList.innerHTML = html;
+        }
+
+        function addTask(event) {
+            event.preventDefault();
+            
+            var title = document.getElementById('taskTitle').value.trim();
+            var description = document.getElementById('taskDescription').value.trim();
+            var assigneeSelect = document.getElementById('taskAssignee');
+            var selectedAssignees = [];
+            
+            for (var i = 0; i < assigneeSelect.options.length; i++) {
+                if (assigneeSelect.options[i].selected) {
+                    selectedAssignees.push(assigneeSelect.options[i].value);
+                }
+            }
+            
+            var priority = document.getElementById('taskPriority').value;
+            var dueDate = document.getElementById('taskDueDate').value;
+            var status = document.getElementById('taskStatus').value;
+            var selectedTags = document.getElementById('selectedTags').value;
+            var enableReminder = document.getElementById('enableReminder').checked;
+            
+            if (!title || selectedAssignees.length === 0) {
+                showAlert('danger', 'Errore', 'Inserisci almeno il titolo e seleziona un assegnatario');
+                return;
+            }
+            
+            var task = {
+                id: taskManager.editingTaskId || generateId(),
+                title: title,
+                description: description,
+                assignee: selectedAssignees,
+                priority: priority,
+                dueDate: dueDate,
+                status: status,
+                tags: selectedTags ? selectedTags.split(',') : [],
+                enableReminder: enableReminder,
+                createdAt: taskManager.editingTaskId ? 
+                    (taskManager.tasks.find(function(t) { return t.id === taskManager.editingTaskId; }) || {}).createdAt || new Date().toISOString()
+                    : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: taskManager.currentUser
+            };
+            
+            if (taskManager.editingTaskId) {
+                var taskIndex = taskManager.tasks.findIndex(function(t) { return t.id === taskManager.editingTaskId; });
+                if (taskIndex !== -1) {
+                    taskManager.tasks[taskIndex] = task;
+                    showAlert('success', 'Compito Aggiornato', 'Il compito è stato aggiornato con successo');
+                    addNotification('info', 'Compito Modificato', 'Il compito "' + task.title + '" è stato aggiornato', task.id);
+                } else {
+                    taskManager.tasks.push(task);
+                    showAlert('success', 'Compito Aggiunto', 'Il compito è stato creato con successo');
+                }
+                taskManager.editingTaskId = null;
+            } else {
+                taskManager.tasks.push(task);
+                showAlert('success', 'Compito Aggiunto', 'Il compito è stato creato con successo');
+                addNotification('assigned', 'Nuovo Compito Creato', 
+                    'Il compito "' + task.title + '" è stato assegnato a ' + selectedAssignees.join(', '), task.id);
+                
+                setTimeout(function() { showNotificationModal(task.title, selectedAssignees); }, 1000);
+            }
+            
+            saveData();
+            resetForm();
+            renderCurrentView();
+            updateStats();
+        }
+
+        function resetForm() {
+            document.getElementById('taskForm').reset();
+            document.getElementById('selectedTags').value = '';
+            
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                tagOptions[i].classList.remove('selected');
+            }
+            
+            var submitButton = document.querySelector('.btn-primary');
+            if (submitButton) {
+                submitButton.innerHTML = '➕ Aggiungi Compito';
+            }
+            
+            taskManager.editingTaskId = null;
+        }
+
+        function editTask(taskId) {
+            var task = taskManager.tasks.find(function(t) { return t.id === taskId; });
+            if (!task) return;
+            
+            taskManager.editingTaskId = taskId;
+            
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskDescription').value = task.description || '';
+            document.getElementById('taskPriority').value = task.priority;
+            document.getElementById('taskDueDate').value = task.dueDate || '';
+            document.getElementById('taskStatus').value = task.status;
+            document.getElementById('enableReminder').checked = task.enableReminder || false;
+            
+            var assigneeSelect = document.getElementById('taskAssignee');
+            for (var i = 0; i < assigneeSelect.options.length; i++) {
+                var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                assigneeSelect.options[i].selected = assignees.indexOf(assigneeSelect.options[i].value) !== -1;
+            }
+            
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                var isSelected = task.tags && task.tags.indexOf(tagOptions[i].getAttribute('data-tag')) !== -1;
+                tagOptions[i].classList.toggle('selected', isSelected);
+            }
+            updateSelectedTags();
+            
+            var submitButton = document.querySelector('.btn-primary');
+            if (submitButton) {
+                submitButton.innerHTML = '✏️ Aggiorna Compito';
+            }
+            
+            document.querySelector('.task-form').scrollIntoView({ behavior: 'smooth' });
+            showAlert('info', 'Modalità Modifica', 'Modifica i dati e clicca "Aggiorna Compito"');
+        }
+
+        function deleteTask(taskId) {
+            if (!confirm('Sei sicuro di voler eliminare questo compito?')) return;
+            
+            var task = taskManager.tasks.find(function(t) { return t.id === taskId; });
+            if (task) {
+                taskManager.tasks = taskManager.tasks.filter(function(t) { return t.id !== taskId; });
+                saveData();
+                renderCurrentView();
+                updateStats();
+                
+                addNotification('info', 'Compito Eliminato', 'Il compito "' + task.title + '" è stato eliminato', taskId);
+                showAlert('info', 'Compito Eliminato', 'Il compito è stato rimosso con successo');
+            }
+        }
+
+        function updateTaskStatus(taskId, newStatus) {
+            for (var i = 0; i < taskManager.tasks.length; i++) {
+                if (taskManager.tasks[i].id === taskId) {
+                    var task = taskManager.tasks[i];
+                    var oldStatus = task.status;
+                    task.status = newStatus;
+                    task.updatedAt = new Date().toISOString();
+                    saveData();
+                    renderCurrentView();
+                    updateStats();
+                    
+                    if (newStatus === 'completato' && oldStatus !== 'completato') {
+                        addNotification('completed', 'Compito Completato!', 
+                            'Il compito "' + task.title + '" è stato completato', task.id);
+                    }
+                    break;
+                }
+            }
+        }
+
+        function initializeTags() {
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                tagOptions[i].addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateSelectedTags();
+                });
+            }
+        }
+
+        function updateSelectedTags() {
+            var selectedTags = [];
+            var tagOptions = document.querySelectorAll('.tag-option.selected');
+            for (var i = 0; i < tagOptions.length; i++) {
+                selectedTags.push(tagOptions[i].getAttribute('data-tag'));
+            }
+            document.getElementById('selectedTags').value = selectedTags.join(',');
+        }
+
+        function applyFilters() {
+            taskManager.filters.assignee = document.getElementById('filterAssignee').value;
+            taskManager.filters.priority = document.getElementById('filterPriority').value;
+            taskManager.filters.status = document.getElementById('filterStatus').value;
+            renderCurrentView();
+        }
+
+        function clearFilters() {
+            taskManager.filters = { assignee: 'tutti', priority: 'tutte', status: 'tutti', tags: [] };
+            document.getElementById('filterAssignee').value = 'tutti';
+            document.getElementById('filterPriority').value = 'tutte';
+            document.getElementById('filterStatus').value = 'tutti';
+            renderCurrentView();
+        }
+
+        function getFilteredTasks() {
+            return taskManager.tasks.filter(function(task) {
+                if (taskManager.filters.assignee !== 'tutti') {
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    if (assignees.indexOf(taskManager.filters.assignee) === -1) {
+                        return false;
+                    }
+                }
+                
+                if (taskManager.filters.priority !== 'tutte' && task.priority !== taskManager.filters.priority) {
+                    return false;
+                }
+                
+                if (taskManager.filters.status !== 'tutti' && task.status !== taskManager.filters.status) {
+                    return false;
+                }
+                
+                return true;
+            });
+        }
+
+        function switchView(viewType) {
+            taskManager.currentView = viewType;
+            
+            var viewButtons = document.querySelectorAll('.btn-view');
+            for (var i = 0; i < viewButtons.length; i++) {
+                viewButtons[i].classList.remove('active');
+                viewButtons[i].style.background = '#95a5a6';
+            }
+            
+            var activeButton = document.getElementById('view' + viewType.charAt(0).toUpperCase() + viewType.slice(1));
+            if (activeButton) {
+                activeButton.classList.add('active');
+                activeButton.style.background = '#667eea';
+            }
+            
+            document.getElementById('listaView').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'none';
+            document.getElementById('kanbanView').style.display = 'none';
+            
+            if (viewType === 'lista') {
+                document.getElementById('listaView').style.display = 'block';
+                renderTasks();
+            } else if (viewType === 'dashboard') {
+                document.getElementById('dashboardView').style.display = 'block';
+                renderDashboard();
+            } else if (viewType === 'kanban') {
+                document.getElementById('kanbanView').style.display = 'block';
+                renderKanban();
+            }
+        }
+
+        function renderCurrentView() {
+            if (taskManager.currentView === 'lista') {
+                renderTasks();
+            } else if (taskManager.currentView === 'dashboard') {
+                renderDashboard();
+            } else if (taskManager.currentView === 'kanban') {
+                renderKanban();
+            }
+        }
+
+        function renderTasks() {
+            var tasksGrid = document.getElementById('tasksGrid');
+            var filteredTasks = getFilteredTasks();
+            
+            if (filteredTasks.length === 0) {
+                tasksGrid.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<div style="font-size: 4rem; margin-bottom: 20px;">📋</div>' +
+                    '<h3>Nessun compito presente</h3>' +
+                    '<p>Aggiungi il tuo primo compito utilizzando il form sopra</p>' +
+                    '</div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < filteredTasks.length; i++) {
+                var task = filteredTasks[i];
+                var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                var tags = task.tags || [];
+                
+                html += 
+                    '<div class="task-card">' +
+                    '<div class="task-title">' + task.title + '</div>' +
+                    '<div class="task-description">' + (task.description || 'Nessuna descrizione') + '</div>' +
+                    '<div class="task-meta">' +
+                    '<span>👤 ' + assignees.join(', ') + '</span>' +
+                    '<span>📅 ' + (task.dueDate ? formatDate(task.dueDate) : 'Nessuna scadenza') + '</span>' +
+                    '</div>';
+                
+                if (tags.length > 0) {
+                    html += '<div style="margin-bottom: 15px;">';
+                    for (var j = 0; j < tags.length; j++) {
+                        var tagColors = {
+                            'Urgente': '#e74c3c', 'Cliente': '#3498db', 'Interno': '#95a5a6',
+                            'Marketing': '#e67e22', 'Sviluppo': '#27ae60', 'Vendite': '#9b59b6'
+                        };
+                        html += '<span style="background: ' + (tagColors[tags[j]] || '#95a5a6') + '; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-right: 4px;">' + tags[j] + '</span>';
+                    }
+                    html += '</div>';
+                }
+                
+                html += 
+                    '<div class="task-status">' +
+                    '<span class="task-priority ' + taskManager.priorities[task.priority].class + '">' + taskManager.priorities[task.priority].label + '</span>' +
+                    '<select class="status-select" onchange="updateTaskStatus(\'' + task.id + '\', this.value)">';
+                
+                for (var status in taskManager.taskStates) {
+                    var selected = task.status === status ? ' selected' : '';
+                    html += '<option value="' + status + '"' + selected + '>' + taskManager.taskStates[status].label + '</option>';
+                }
+                
+                html += '</select></div>' +
+                    '<div class="task-actions">' +
+                    '<button class="btn-small btn-edit" onclick="editTask(\'' + task.id + '\')">✏️ Modifica</button>' +
+                    '<button class="btn-small btn-delete" onclick="deleteTask(\'' + task.id + '\')">🗑️ Elimina</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            tasksGrid.innerHTML = html;
+        }
+
+        function renderDashboard() {
+            renderTeamProductivity();
+            renderStatusChart();
+            renderTeamGrid();
+        }
+
+        function renderTeamProductivity() {
+            var container = document.getElementById('teamProductivity');
+            if (!container) return;
+            
+            var filteredTasks = getFilteredTasks();
+            var completedTasks = filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
+            var totalTasks = filteredTasks.length;
+            var percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            container.innerHTML = 
+                '<div class="progress-bar"><div class="progress-fill" style="width: ' + percentage + '%;"></div></div>' +
+                '<div style="display: flex; justify-content: space-between; margin-top: 10px;">' +
+                '<span>Completati: ' + completedTasks + '</span>' +
+                '<span>Totali: ' + totalTasks + '</span>' +
+                '<span>' + percentage + '%</span></div>';
+        }
+
+        function renderStatusChart() {
+            var container = document.getElementById('statusChart');
+            if (!container) return;
+            
+            var filteredTasks = getFilteredTasks();
+            var statusCounts = {};
+            
+            for (var status in taskManager.taskStates) {
+                statusCounts[status] = 0;
+            }
+            
+            for (var i = 0; i < filteredTasks.length; i++) {
+                statusCounts[filteredTasks[i].status]++;
+            }
+            
+            var html = '';
+            for (var status in statusCounts) {
+                var count = statusCounts[status];
+                var percentage = filteredTasks.length > 0 ? (count / filteredTasks.length) * 100 : 0;
+                html += 
+                    '<div style="margin-bottom: 10px;">' +
+                    '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
+                    '<span>' + taskManager.taskStates[status].label + '</span>' +
+                    '<span>' + count + '</span></div>' +
+                    '<div class="progress-bar"><div class="progress-fill" style="width: ' + percentage + '%;"></div></div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderTeamGrid() {
+            var container = document.getElementById('teamGrid');
+            if (!container) return;
+            
+            var filteredTasks = getFilteredTasks();
+            var html = '';
+            
+            for (var i = 0; i < taskManager.teamMembers.length; i++) {
+                var member = taskManager.teamMembers[i];
+                var memberTasks = filteredTasks.filter(function(task) {
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    return assignees.indexOf(member) !== -1;
+                });
+                
+                var completedTasks = memberTasks.filter(function(t) { return t.status === 'completato'; }).length;
+                var percentage = memberTasks.length > 0 ? Math.round((completedTasks / memberTasks.length) * 100) : 0;
+                
+                html += 
+                    '<div class="team-card">' +
+                    '<div class="team-avatar">' + member.charAt(0) + '</div>' +
+                    '<div style="font-weight: 600; margin-bottom: 5px;">' + member + '</div>' +
+                    '<div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">' + memberTasks.length + ' tasks</div>' +
+                    '<div class="progress-bar"><div class="progress-fill" style="width: ' + percentage + '%;"></div></div>' +
+                    '<div style="font-size: 0.8rem; margin-top: 5px;">' + percentage + '% completato</div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderKanban() {
+            var container = document.getElementById('kanbanBoard');
+            if (!container) return;
+            
+            var filteredTasks = getFilteredTasks();
+            var columns = [
+                { id: 'da-iniziare', title: '📋 Da Iniziare', color: '#95a5a6' },
+                { id: 'in-corso', title: '🚀 In Corso', color: '#3498db' },
+                { id: 'in-revisione', title: '👁️ In Revisione', color: '#f39c12' },
+                { id: 'completato', title: '✅ Completato', color: '#27ae60' }
+            ];
+            
+            var html = '';
+            
+            for (var i = 0; i < columns.length; i++) {
+                var column = columns[i];
+                var columnTasks = filteredTasks.filter(function(task) {
+                    return task.status === column.id;
+                });
+                
+                html += 
+                    '<div class="kanban-column">' +
+                    '<div class="kanban-header" style="background: ' + column.color + ';">' +
+                    column.title + ' (' + columnTasks.length + ')' +
+                    '</div>';
+                
+                for (var j = 0; j < columnTasks.length; j++) {
+                    var task = columnTasks[j];
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    
+                    html += 
+                        '<div class="kanban-task">' +
+                        '<div style="font-weight: 600; margin-bottom: 8px;">' + task.title + '</div>' +
+                        '<div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 8px;">' + (task.description || '') + '</div>' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">' +
+                        '<span>👤 ' + assignees.join(', ') + '</span>' +
+                        '<span class="task-priority ' + taskManager.priorities[task.priority].class + '">' + taskManager.priorities[task.priority].label + '</span>' +
+                        '</div></div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function updateStats() {
+            var filteredTasks = getFilteredTasks();
+            
+            var totalEl = document.getElementById('totalTasks');
+            var inProgressEl = document.getElementById('inProgressTasks');
+            var completedEl = document.getElementById('completedTasks');
+            var pendingEl = document.getElementById('pendingTasks');
+            
+            if (totalEl) totalEl.textContent = filteredTasks.length;
+            if (inProgressEl) inProgressEl.textContent = filteredTasks.filter(function(t) { return t.status === 'in-corso'; }).length;
+            if (completedEl) completedEl.textContent = filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
+            if (pendingEl) pendingEl.textContent = filteredTasks.filter(function(t) { return t.status === 'da-iniziare'; }).length;
+        }
+
+        function exportAllData() {
+            var allData = {
+                tasks: taskManager.tasks,
+                notifications: taskManager.notifications,
+                exportDate: new Date().toISOString(),
+                teamMembers: taskManager.teamMembers,
+                version: '1.0'
+            };
+            
+            var dataStr = JSON.stringify(allData, null, 2);
+            var blob = new Blob([dataStr], { type: 'application/json' });
+            var link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                var fileName = 'GruppoVisconti_Tasks_Backup_' + new Date().toISOString().split('T')[0] + '.json';
+                var url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert('success', 'Backup Creato', 'File di backup scaricato con successo');
+            } else {
+                showAlert('danger', 'Errore Backup', 'Download non supportato su questo browser');
+            }
+        }
+
+        function importData() {
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = function(event) {
+                var file = event.target.files[0];
+                if (file) {
+                    var reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            var importedData = JSON.parse(e.target.result);
+                            
+                            if (importedData.tasks && Array.isArray(importedData.tasks)) {
+                                var confirmMsg = 'Trovati ' + importedData.tasks.length + ' compiti da importare.\n' +
+                                               'Vuoi sostituire i dati attuali (' + taskManager.tasks.length + ' compiti) con quelli importati?';
+                                
+                                if (confirm(confirmMsg)) {
+                                    taskManager.tasks = importedData.tasks;
+                                    taskManager.notifications = importedData.notifications || [];
+                                    
+                                    saveData();
+                                    renderCurrentView();
+                                    renderNotifications();
+                                    updateStats();
+                                    
+                                    showAlert('success', 'Import Completato', 
+                                        'Importati con successo ' + importedData.tasks.length + ' compiti!');
+                                }
+                            } else {
+                                showAlert('danger', 'Errore Import', 'File non valido o formato non riconosciuto');
+                            }
+                        } catch (error) {
+                            showAlert('danger', 'Errore Import', 'Impossibile leggere il file: ' + error.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission().then(function(permission) {
+                    if (permission === 'granted') {
+                        showAlert('success', 'Notifiche Attivate', 'Le notifiche del browser sono ora attive');
+                        
+                        new Notification('📋 Gruppo Visconti', {
+                            body: 'Notifiche del Task Manager attivate con successo!',
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="0.9em" font-size="90">📋</text></svg>'
+                        });
+                    } else {
+                        showAlert('warning', 'Notifiche Negate', 'Le notifiche sono state rifiutate dal browser');
+                    }
+                });
+            } else if (Notification.permission === 'granted') {
+                showAlert('info', 'Notifiche Già Attive', 'Le notifiche del browser sono già attivate');
+            } else {
+                showAlert('warning', 'Notifiche Non Supportate', 'Questo browser non supporta le notifiche');
+            }
+        }
+
+        function showNotificationModal(taskTitle, assignees) {
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; display: flex; align-items: center; justify-content: center;';
+            
+            var modalContent = document.createElement('div');
+            modalContent.style.cssText = 'background: white; border-radius: 15px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3);';
+            
+            modalContent.innerHTML = 
+                '<h3 style="margin-bottom: 20px; color: #2c3e50;">📱 Invia Notifiche</h3>' +
+                '<p style="margin-bottom: 20px; color: #7f8c8d;">Vuoi inviare una notifica per il compito "<strong>' + taskTitle + '</strong>"?</p>' +
+                '<div style="margin-bottom: 20px;"><strong>👥 Assegnatari:</strong><br>' +
+                assignees.map(function(name) {
+                    var contact = teamContacts[name];
+                    return '📧 ' + name + ' - ' + (contact ? contact.email : 'Email non disponibile');
+                }).join('<br>') + '</div>' +
+                '<div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">' +
+                '<button onclick="sendWhatsAppNotification(\'' + assignees.join('|') + '\', \'' + taskTitle + '\')" style="background: #25D366; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">💬 WhatsApp</button>' +
+                '<button onclick="sendEmailNotification(\'' + assignees.join('|') + '\', \'' + taskTitle + '\')" style="background: #EA4335; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">📧 Email</button>' +
+                '<button onclick="closeNotificationModal()" style="background: #95a5a6; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">❌ Chiudi</button>' +
+                '</div>';
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            modal.id = 'notificationModal';
+        }
+
+        function sendWhatsAppNotification(assigneesString, taskTitle) {
+            var assignees = assigneesString.split('|');
+            var message = '📋 *Nuovo Compito Assegnato*\n\n*Titolo:* ' + taskTitle + '\n*Assegnato da:* ' + taskManager.currentUser + '\n*Data:* ' + new Date().toLocaleDateString('it-IT') + '\n\n📱 Gruppo Visconti - Task Manager';
+            
+            for (var i = 0; i < assignees.length; i++) {
+                var contact = teamContacts[assignees[i]];
+                if (contact && contact.whatsapp) {
+                    var whatsappUrl = 'https://wa.me/' + contact.whatsapp.replace(/[^0-9]/g, '') + '?text=' + encodeURIComponent(message);
+                    window.open(whatsappUrl, '_blank');
+                }
+            }
+            
+            closeNotificationModal();
+            showAlert('success', 'WhatsApp Aperto', 'Si sono aperti i link per inviare i messaggi WhatsApp');
+        }
+
+        function sendEmailNotification(assigneesString, taskTitle) {
+            var assignees = assigneesString.split('|');
+            var subject = '📋 Nuovo Compito Assegnato: ' + taskTitle;
+            var body = 'Ciao!\n\nTi è stato assegnato un nuovo compito:\n\n📋 TITOLO: ' + taskTitle + '\n👤 ASSEGNATO DA: ' + taskManager.currentUser + '\n📆 DATA: ' + new Date().toLocaleDateString('it-IT') + '\n\nAccedi al Task Manager per maggiori dettagli.\n\n---\nGruppo Visconti - Join the ReEvolution';
+            
+            for (var i = 0; i < assignees.length; i++) {
+                var contact = teamContacts[assignees[i]];
+                if (contact && contact.email) {
+                    var mailtoUrl = 'mailto:' + contact.email + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+                    window.open(mailtoUrl, '_blank');
+                }
+            }
+            
+            closeNotificationModal();
+            showAlert('success', 'Email Aperta', 'Si sono aperti i client email per inviare le notifiche');
+        }
+
+        function closeNotificationModal() {
+            var modal = document.getElementById('notificationModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function addSampleTasks() {
+            var sampleTasks = [
+                {
+                    id: generateId(),
+                    title: 'Preparare presentazione Q4',
+                    description: 'Creare slides per la presentazione dei risultati del quarto trimestre',
+                    assignee: ['LUCIANO', 'ANTONIO'],
+                    priority: 'alta',
+                    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'in-corso',
+                    tags: ['Urgente', 'Cliente'],
+                    enableReminder: true,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                },
+                {
+                    id: generateId(),
+                    title: 'Aggiornare il sito web aziendale',
+                    description: 'Implementare le nuove funzionalità richieste dal cliente',
+                    assignee: ['LUIGI', 'DARIO'],
+                    priority: 'media',
+                    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'da-iniziare',
+                    tags: ['Sviluppo', 'Cliente'],
+                    enableReminder: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                },
+                {
+                    id: generateId(),
+                    title: 'Campagna marketing sui social',
+                    description: 'Pianificare e lanciare la nuova campagna promozionale',
+                    assignee: ['NOEMI'],
+                    priority: 'media',
+                    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'completato',
+                    tags: ['Marketing', 'Interno'],
+                    enableReminder: false,
+                    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                }
+            ];
+            
+            taskManager.tasks = taskManager.tasks.concat(sampleTasks);
+            saveData();
+            renderCurrentView();
+            updateStats();
+            
+            showAlert('success', 'Dati Demo Aggiunti', 'Sono stati aggiunti alcuni compiti di esempio');
+        }
+
+        function init() {
+            console.log('🚀 Inizializzazione Task Manager Gruppo Visconti');
+            
+            var dataLoaded = loadData();
+            
+            var taskForm = document.getElementById('taskForm');
+            if (taskForm) {
+                taskForm.addEventListener('submit', addTask);
+            }
+            
+            initializeTags();
+            
+            renderCurrentView();
+            renderNotifications();
+            updateStats();
+            
+            if (!dataLoaded || taskManager.tasks.length === 0) {
+                setTimeout(function() {
+                    showAlert('info', 'Benvenuto nel Task Manager!', 
+                        'Prima volta? Aggiungi il tuo primo compito o usa "💾 Backup" per salvare i dati.', 8000);
+                }, 1000);
+            }
+            
+            console.log('✅ Task Manager inizializzato con successo');
+        }
+
+        function startAutoSave() {
+            setInterval(function() {
+                if (taskManager.tasks.length > 0 || taskManager.notifications.length > 0) {
+                    saveData();
+                }
+            }, 30000);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                init();
+                startAutoSave();
+            });
+        } else {
+            init();
+            startAutoSave();
+        }
+
+        window.addEventListener('beforeunload', function() {
+            saveData();
+        });
+
+        window.addDemoData = addSampleTasks;
+    </script>
+</body>
+</html><!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
