@@ -294,6 +294,175 @@
 
         .empty-state { text-align: center; padding: 60px 20px; color: #7f8c8d; }
 
+        /* Stili per Tags */
+        .tag-option {
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .tag-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .tag-option.selected {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .filter-tag {
+            transition: all 0.3s;
+            user-select: none;
+        }
+        .filter-tag:hover {
+            opacity: 0.8 !important;
+        }
+        .filter-tag.active {
+            opacity: 1 !important;
+            box-shadow: 0 0 0 2px white;
+        }
+
+        /* Vista Kanban */
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .kanban-column {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            min-height: 400px;
+        }
+
+        .kanban-header {
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .kanban-task {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+
+        .kanban-task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        /* Dashboard Charts */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+
+        /* Team Member Cards */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .team-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .team-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .btn-view {
+            transition: all 0.3s;
+        }
+
+        .btn-view.active {
+            background: #667eea !important;
+            box-shadow: 0 2px 5px rgba(102, 126, 234, 0.3);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: scale(1.05);
+        }
+
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
             .tasks-grid { grid-template-columns: 1fr; }
@@ -341,7 +510,26 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label for="taskAssignee">Assegnato a *</label>
-                            <input type="text" id="taskAssignee" required placeholder="Nome e cognome" maxlength="50">
+                            <select id="taskAssignee" required multiple style="height: auto; min-height: 50px;">
+                                <option value="Marco Rossi">👤 Marco Rossi</option>
+                                <option value="Luca Bianchi">👤 Luca Bianchi</option>
+                                <option value="Sara Verde">👤 Sara Verde</option>
+                                <option value="Admin" selected>👤 Admin</option>
+                            </select>
+                            <small style="color: rgba(255,255,255,0.8); font-size: 0.8rem;">Tieni premuto Ctrl per selezionare più persone</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="taskTags">Tags</label>
+                            <div id="taskTags" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                <span class="tag-option" data-tag="Urgente" style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">🔥 Urgente</span>
+                                <span class="tag-option" data-tag="Cliente" style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">👥 Cliente</span>
+                                <span class="tag-option" data-tag="Interno" style="background: #95a5a6; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">🏢 Interno</span>
+                                <span class="tag-option" data-tag="Marketing" style="background: #e67e22; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">📢 Marketing</span>
+                                <span class="tag-option" data-tag="Sviluppo" style="background: #27ae60; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">💻 Sviluppo</span>
+                                <span class="tag-option" data-tag="Vendite" style="background: #9b59b6; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem;">💰 Vendite</span>
+                            </div>
+                            <input type="hidden" id="selectedTags" value="">
                         </div>
                         
                         <div class="form-group">
@@ -384,20 +572,71 @@
                         <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 200px;">
                             ➕ Aggiungi Compito
                         </button>
+                        
+                        <!-- Pulsanti Vista -->
+                        <div style="display: flex; gap: 5px;">
+                            <button type="button" class="btn-view active" id="viewLista" onclick="switchView('lista')" style="background: #667eea; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                                📋 Lista
+                            </button>
+                            <button type="button" class="btn-view" id="viewDashboard" onclick="switchView('dashboard')" style="background: #95a5a6; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                                📊 Dashboard
+                            </button>
+                            <button type="button" class="btn-view" id="viewKanban" onclick="switchView('kanban')" style="background: #95a5a6; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 14px;">
+                                📌 Kanban
+                            </button>
+                        </div>
+                        
                         <button type="button" class="btn btn-success" onclick="exportToExcel()" style="flex: 0 0 auto;">
-                            📊 Esporta Excel
+                            📊 Excel
                         </button>
                         <button type="button" class="btn btn-purple" onclick="checkDeadlines()" style="flex: 0 0 auto;">
-                            🔔 Verifica Scadenze
+                            🔔 Scadenze
                         </button>
                         <button type="button" class="btn btn-purple" onclick="openSyncModal()" style="flex: 0 0 auto;">
-                            🔗 Sincronizza
+                            🔗 Sync
                         </button>
                     </div>
                 </form>
             </div>
 
-            <!-- Statistiche -->
+            <!-- Barra Filtri -->
+            <div class="filters-bar" style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                <div style="font-weight: 600; color: #2c3e50;">🔍 Filtri:</div>
+                
+                <select id="filterAssignee" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="tutti">👥 Tutti gli assegnatari</option>
+                    <option value="Marco Rossi">👤 Marco Rossi</option>
+                    <option value="Luca Bianchi">👤 Luca Bianchi</option>
+                    <option value="Sara Verde">👤 Sara Verde</option>
+                    <option value="Admin">👤 Admin</option>
+                </select>
+                
+                <select id="filterPriority" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="tutte">🎯 Tutte le priorità</option>
+                    <option value="alta">🔴 Alta</option>
+                    <option value="media">🟡 Media</option>
+                    <option value="bassa">🟢 Bassa</option>
+                </select>
+                
+                <select id="filterStatus" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    <option value="tutti">📋 Tutti gli stati</option>
+                    <option value="da-iniziare">📋 Da Iniziare</option>
+                    <option value="in-corso">🚀 In Corso</option>
+                    <option value="completato">✅ Completato</option>
+                    <option value="in-pausa">⏸️ In Pausa</option>
+                </select>
+                
+                <div id="filterTags" style="display: flex; flex-wrap: wrap; gap: 5px;">
+                    <span class="filter-tag" data-tag="Urgente" style="background: #e74c3c; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; opacity: 0.3;">🔥 Urgente</span>
+                    <span class="filter-tag" data-tag="Cliente" style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; opacity: 0.3;">👥 Cliente</span>
+                    <span class="filter-tag" data-tag="Interno" style="background: #95a5a6; color: white; padding: 4px 8px; border-radius: 12px; cursor: pointer; font-size: 0.8rem; opacity: 0.3;">🏢 Interno</span>
+                </div>
+                
+                <button onclick="clearFilters()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 12px;">
+                    🗑️ Reset
+                </button>
+            </div>
+
             <div class="stats-section" id="statsSection">
                 <div class="stat-card">
                     <div class="stat-number" id="totalTasks">0</div>
@@ -428,8 +667,8 @@
                 </div>
             </div>
 
-            <!-- Lista compiti -->
-            <div class="tasks-section">
+            <!-- Vista Lista -->
+            <div class="tasks-section" id="listaView">
                 <h2 class="section-title">📌 Compiti Attivi</h2>
                 <div class="tasks-grid" id="tasksGrid">
                     <div class="empty-state">
@@ -439,15 +678,56 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Vista Dashboard -->
+            <div class="tasks-section" id="dashboardView" style="display: none;">
+                <h2 class="section-title">📊 Dashboard</h2>
+                <div class="dashboard-grid">
+                    <div class="chart-card">
+                        <div class="chart-title">📈 Produttività Team</div>
+                        <div id="teamProductivity"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">📋 Tasks per Stato</div>
+                        <div id="statusChart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">🎯 Tasks per Priorità</div>
+                        <div id="priorityChart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-title">👥 Carico di Lavoro</div>
+                        <div id="workloadChart"></div>
+                    </div>
+                </div>
+                <div class="team-grid" id="teamGrid"></div>
+            </div>
+
+            <!-- Vista Kanban -->
+            <div class="tasks-section" id="kanbanView" style="display: none;">
+                <h2 class="section-title">📌 Kanban Board</h2>
+                <div class="kanban-board" id="kanbanBoard"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Gruppo Visconti Task Manager - Versione Stabile
+        // Gruppo Visconti Task Manager - Versione Completa
         
         var tasks = [];
         var notifications = [];
         var alertCounter = 0;
+        var currentUser = 'Admin';
+        var teamMembers = ['Marco Rossi', 'Luca Bianchi', 'Sara Verde', 'Admin'];
+        var availableTags = ['Urgente', 'Cliente', 'Interno', 'Marketing', 'Sviluppo', 'Vendite'];
+        var currentView = 'lista';
+        var filters = {
+            assignee: 'tutti',
+            priority: 'tutte',
+            status: 'tutti',
+            tags: [],
+            dateRange: 'tutte'
+        };
 
         var taskStates = {
             'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
@@ -464,6 +744,7 @@
             'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
         };
 
+        // Funzioni di utilità
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
@@ -476,22 +757,63 @@
 
         function saveTasks() {
             try {
-                localStorage.setItem('tasks', JSON.stringify(tasks));
-                console.log('✅ Tasks salvati nel localStorage');
+                var taskData = JSON.stringify(tasks);
+                document.cookie = "tasks=" + encodeURIComponent(taskData) + "; path=/; max-age=" + (365*24*60*60);
+                console.log('✅ Tasks salvati');
             } catch (error) {
                 console.error('❌ Errore salvataggio tasks:', error);
             }
         }
 
+        function loadTasks() {
+            try {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.indexOf('tasks=') === 0) {
+                        var taskData = decodeURIComponent(cookie.substring(6));
+                        tasks = JSON.parse(taskData);
+                        console.log('✅ Tasks caricati:', tasks.length);
+                        return;
+                    }
+                }
+                tasks = [];
+            } catch (error) {
+                console.error('❌ Errore caricamento tasks:', error);
+                tasks = [];
+            }
+        }
+
         function saveNotifications() {
             try {
-                localStorage.setItem('notifications', JSON.stringify(notifications));
-                console.log('✅ Notifications salvate nel localStorage');
+                var notifData = JSON.stringify(notifications);
+                document.cookie = "notifications=" + encodeURIComponent(notifData) + "; path=/; max-age=" + (365*24*60*60);
+                console.log('✅ Notifications salvate');
             } catch (error) {
                 console.error('❌ Errore salvataggio notifications:', error);
             }
         }
 
+        function loadNotifications() {
+            try {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    if (cookie.indexOf('notifications=') === 0) {
+                        var notifData = decodeURIComponent(cookie.substring(14));
+                        notifications = JSON.parse(notifData);
+                        console.log('✅ Notifications caricate:', notifications.length);
+                        return;
+                    }
+                }
+                notifications = [];
+            } catch (error) {
+                console.error('❌ Errore caricamento notifications:', error);
+                notifications = [];
+            }
+        }
+
+        // Sistema di Alert
         function showAlert(type, title, message, duration) {
             duration = duration || 5000;
             alertCounter++;
@@ -557,6 +879,7 @@
             return '';
         }
 
+        // Sistema Notifiche
         function addNotification(type, title, message, taskId) {
             var notification = {
                 id: generateId(),
@@ -623,3 +946,737 @@
                     '</div>' +
                     '<div class="notification-time">' + getTimeAgo(notif.timestamp) + '</div>' +
                     '</div>';
+            }
+            
+            notificationsList.innerHTML = html;
+        }
+
+        // Gestione Form e Tasks
+        function addTask(event) {
+            event.preventDefault();
+            
+            var title = document.getElementById('taskTitle').value.trim();
+            var description = document.getElementById('taskDescription').value.trim();
+            var assigneeSelect = document.getElementById('taskAssignee');
+            var selectedAssignees = [];
+            for (var i = 0; i < assigneeSelect.options.length; i++) {
+                if (assigneeSelect.options[i].selected) {
+                    selectedAssignees.push(assigneeSelect.options[i].value);
+                }
+            }
+            var priority = document.getElementById('taskPriority').value;
+            var dueDate = document.getElementById('taskDueDate').value;
+            var status = document.getElementById('taskStatus').value;
+            var selectedTags = document.getElementById('selectedTags').value;
+            var enableReminder = document.getElementById('enableReminder').checked;
+            
+            if (!title || selectedAssignees.length === 0) {
+                showAlert('danger', 'Errore', 'Inserisci almeno il titolo e seleziona un assegnatario');
+                return;
+            }
+            
+            var task = {
+                id: generateId(),
+                title: title,
+                description: description,
+                assignee: selectedAssignees,
+                priority: priority,
+                dueDate: dueDate,
+                status: status,
+                tags: selectedTags ? selectedTags.split(',') : [],
+                enableReminder: enableReminder,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                createdBy: currentUser
+            };
+            
+            tasks.push(task);
+            saveTasks();
+            
+            // Reset form
+            document.getElementById('taskForm').reset();
+            document.getElementById('selectedTags').value = '';
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                tagOptions[i].classList.remove('selected');
+            }
+            
+            renderCurrentView();
+            updateStats();
+            
+            addNotification('assigned', 'Nuovo Compito Creato', 
+                'Il compito "' + task.title + '" è stato assegnato a ' + selectedAssignees.join(', '), task.id);
+            
+            showAlert('success', 'Compito Aggiunto', 'Il compito "' + title + '" è stato creato con successo');
+        }
+
+        function editTask(taskId) {
+            var task = tasks.find(function(t) { return t.id === taskId; });
+            if (!task) return;
+            
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskDescription').value = task.description || '';
+            document.getElementById('taskPriority').value = task.priority;
+            document.getElementById('taskDueDate').value = task.dueDate || '';
+            document.getElementById('taskStatus').value = task.status;
+            document.getElementById('enableReminder').checked = task.enableReminder || false;
+            
+            // Seleziona assegnatari
+            var assigneeSelect = document.getElementById('taskAssignee');
+            for (var i = 0; i < assigneeSelect.options.length; i++) {
+                var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                assigneeSelect.options[i].selected = assignees.indexOf(assigneeSelect.options[i].value) !== -1;
+            }
+            
+            // Seleziona tags
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                var isSelected = task.tags && task.tags.indexOf(tagOptions[i].getAttribute('data-tag')) !== -1;
+                if (isSelected) {
+                    tagOptions[i].classList.add('selected');
+                } else {
+                    tagOptions[i].classList.remove('selected');
+                }
+            }
+            updateSelectedTags();
+            
+            // Rimuovi il task dalla lista (sarà ri-aggiunto quando si salva)
+            tasks = tasks.filter(function(t) { return t.id !== taskId; });
+            saveTasks();
+            renderCurrentView();
+            updateStats();
+            
+            showAlert('info', 'Modalità Modifica', 'Il compito è pronto per essere modificato');
+        }
+
+        function deleteTask(taskId) {
+            if (!confirm('Sei sicuro di voler eliminare questo compito?')) return;
+            
+            var task = tasks.find(function(t) { return t.id === taskId; });
+            if (task) {
+                tasks = tasks.filter(function(t) { return t.id !== taskId; });
+                saveTasks();
+                renderCurrentView();
+                updateStats();
+                
+                addNotification('info', 'Compito Eliminato', 
+                    'Il compito "' + task.title + '" è stato eliminato', taskId);
+                
+                showAlert('info', 'Compito Eliminato', 'Il compito è stato rimosso con successo');
+            }
+        }
+
+        function updateTaskStatus(taskId, newStatus) {
+            for (var i = 0; i < tasks.length; i++) {
+                if (tasks[i].id === taskId) {
+                    var task = tasks[i];
+                    var oldStatus = task.status;
+                    task.status = newStatus;
+                    task.updatedAt = new Date().toISOString();
+                    saveTasks();
+                    renderCurrentView();
+                    updateStats();
+                    
+                    if (newStatus === 'completato' && oldStatus !== 'completato') {
+                        addNotification('completed', 'Compito Completato!', 
+                            'Il compito "' + task.title + '" è stato completato', task.id);
+                    } else if (newStatus === 'in-corso' && oldStatus === 'da-iniziare') {
+                        addNotification('reminder', 'Compito Iniziato', 
+                            'Il lavoro su "' + task.title + '" è iniziato', task.id);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Gestione Tags
+        function initializeTags() {
+            var tagOptions = document.querySelectorAll('.tag-option');
+            for (var i = 0; i < tagOptions.length; i++) {
+                tagOptions[i].addEventListener('click', function() {
+                    this.classList.toggle('selected');
+                    updateSelectedTags();
+                });
+            }
+        }
+
+        function updateSelectedTags() {
+            var selectedTags = [];
+            var tagOptions = document.querySelectorAll('.tag-option.selected');
+            for (var i = 0; i < tagOptions.length; i++) {
+                selectedTags.push(tagOptions[i].getAttribute('data-tag'));
+            }
+            document.getElementById('selectedTags').value = selectedTags.join(',');
+        }
+
+        // Sistema Filtri
+        function applyFilters() {
+            filters.assignee = document.getElementById('filterAssignee').value;
+            filters.priority = document.getElementById('filterPriority').value;
+            filters.status = document.getElementById('filterStatus').value;
+            
+            renderCurrentView();
+        }
+
+        function clearFilters() {
+            filters = {
+                assignee: 'tutti',
+                priority: 'tutte',
+                status: 'tutti',
+                tags: []
+            };
+            
+            document.getElementById('filterAssignee').value = 'tutti';
+            document.getElementById('filterPriority').value = 'tutte';
+            document.getElementById('filterStatus').value = 'tutti';
+            
+            var filterTags = document.querySelectorAll('.filter-tag');
+            for (var i = 0; i < filterTags.length; i++) {
+                filterTags[i].classList.remove('active');
+            }
+            
+            renderCurrentView();
+        }
+
+        function initializeFilterTags() {
+            var filterTags = document.querySelectorAll('.filter-tag');
+            for (var i = 0; i < filterTags.length; i++) {
+                filterTags[i].addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    updateTagFilters();
+                });
+            }
+        }
+
+        function updateTagFilters() {
+            filters.tags = [];
+            var activeTags = document.querySelectorAll('.filter-tag.active');
+            for (var i = 0; i < activeTags.length; i++) {
+                filters.tags.push(activeTags[i].getAttribute('data-tag'));
+            }
+            renderCurrentView();
+        }
+
+        function getFilteredTasks() {
+            return tasks.filter(function(task) {
+                // Filtro Assegnato
+                if (filters.assignee !== 'tutti') {
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    if (assignees.indexOf(filters.assignee) === -1) {
+                        return false;
+                    }
+                }
+                
+                // Filtro Priorità
+                if (filters.priority !== 'tutte' && task.priority !== filters.priority) {
+                    return false;
+                }
+                
+                // Filtro Stato
+                if (filters.status !== 'tutti' && task.status !== filters.status) {
+                    return false;
+                }
+                
+                // Filtro Tags
+                if (filters.tags.length > 0) {
+                    var taskTags = task.tags || [];
+                    var hasMatchingTag = false;
+                    for (var i = 0; i < filters.tags.length; i++) {
+                        if (taskTags.indexOf(filters.tags[i]) !== -1) {
+                            hasMatchingTag = true;
+                            break;
+                        }
+                    }
+                    if (!hasMatchingTag) {
+                        return false;
+                    }
+                }
+                
+                return true;
+            });
+        }
+
+        // Gestione Views
+        function switchView(viewType) {
+            currentView = viewType;
+            
+            // Reset pulsanti
+            var viewButtons = document.querySelectorAll('.btn-view');
+            for (var i = 0; i < viewButtons.length; i++) {
+                viewButtons[i].classList.remove('active');
+                viewButtons[i].style.background = '#95a5a6';
+            }
+            
+            // Attiva pulsante corrente
+            var activeButton = document.getElementById('view' + viewType.charAt(0).toUpperCase() + viewType.slice(1));
+            if (activeButton) {
+                activeButton.classList.add('active');
+                activeButton.style.background = '#667eea';
+            }
+            
+            // Nasconde tutte le view
+            document.getElementById('listaView').style.display = 'none';
+            document.getElementById('dashboardView').style.display = 'none';
+            document.getElementById('kanbanView').style.display = 'none';
+            
+            // Mostra view corrente
+            if (viewType === 'lista') {
+                document.getElementById('listaView').style.display = 'block';
+                renderTasks();
+            } else if (viewType === 'dashboard') {
+                document.getElementById('dashboardView').style.display = 'block';
+                renderDashboard();
+            } else if (viewType === 'kanban') {
+                document.getElementById('kanbanView').style.display = 'block';
+                renderKanban();
+            }
+        }
+
+        function renderCurrentView() {
+            if (currentView === 'lista') {
+                renderTasks();
+            } else if (currentView === 'dashboard') {
+                renderDashboard();
+            } else if (currentView === 'kanban') {
+                renderKanban();
+            }
+        }
+
+        // Rendering Tasks
+        function renderTasks() {
+            var tasksGrid = document.getElementById('tasksGrid');
+            var filteredTasks = getFilteredTasks();
+            
+            if (filteredTasks.length === 0) {
+                tasksGrid.innerHTML = 
+                    '<div class="empty-state">' +
+                    '<div style="font-size: 4rem; margin-bottom: 20px;">📋</div>' +
+                    '<h3>Nessun compito presente</h3>' +
+                    '<p>Aggiungi il tuo primo compito utilizzando il form sopra</p>' +
+                    '</div>';
+                return;
+            }
+            
+            var html = '';
+            for (var i = 0; i < filteredTasks.length; i++) {
+                var task = filteredTasks[i];
+                var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                var tags = task.tags || [];
+                
+                html += 
+                    '<div class="task-card">' +
+                    '<div class="task-title">' + task.title + getDueBadge(task.dueDate) + '</div>' +
+                    '<div class="task-description">' + (task.description || 'Nessuna descrizione') + '</div>' +
+                    '<div class="task-meta">' +
+                    '<span class="task-assignee">👤 ' + assignees.join(', ') + '</span>' +
+                    '<span class="task-date">📅 ' + (task.dueDate ? formatDate(task.dueDate) : 'Nessuna scadenza') + '</span>' +
+                    '</div>';
+                
+                // Tags
+                if (tags.length > 0) {
+                    html += '<div style="margin-bottom: 15px;">';
+                    for (var j = 0; j < tags.length; j++) {
+                        var tagColors = {
+                            'Urgente': '#e74c3c', 'Cliente': '#3498db', 'Interno': '#95a5a6',
+                            'Marketing': '#e67e22', 'Sviluppo': '#27ae60', 'Vendite': '#9b59b6'
+                        };
+                        html += '<span style="background: ' + (tagColors[tags[j]] || '#95a5a6') + '; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-right: 4px;">' + tags[j] + '</span>';
+                    }
+                    html += '</div>';
+                }
+                
+                html += 
+                    '<div class="task-status">' +
+                    '<span class="task-priority ' + priorities[task.priority].class + '">' + priorities[task.priority].label + '</span>' +
+                    '<select class="status-select" onchange="updateTaskStatus(\'' + task.id + '\', this.value)">';
+                
+                for (var status in taskStates) {
+                    var selected = task.status === status ? ' selected' : '';
+                    html += '<option value="' + status + '"' + selected + '>' + taskStates[status].label + '</option>';
+                }
+                
+                html += '</select></div>' +
+                    '<div class="task-actions">' +
+                    '<button class="btn-small btn-edit" onclick="editTask(\'' + task.id + '\')">✏️ Modifica</button>' +
+                    '<button class="btn-small btn-delete" onclick="deleteTask(\'' + task.id + '\')">🗑️ Elimina</button>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            tasksGrid.innerHTML = html;
+        }
+
+        // Vista Dashboard
+        function renderDashboard() {
+            renderTeamProductivity();
+            renderStatusChart();
+            renderPriorityChart();
+            renderWorkloadChart();
+            renderTeamGrid();
+        }
+
+        function renderTeamProductivity() {
+            var container = document.getElementById('teamProductivity');
+            var filteredTasks = getFilteredTasks();
+            var completedTasks = filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
+            var totalTasks = filteredTasks.length;
+            var percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            
+            container.innerHTML = 
+                '<div class="progress-bar">' +
+                '<div class="progress-fill" style="width: ' + percentage + '%;"></div>' +
+                '</div>' +
+                '<div style="display: flex; justify-content: space-between; margin-top: 10px;">' +
+                '<span>Completati: ' + completedTasks + '</span>' +
+                '<span>Totali: ' + totalTasks + '</span>' +
+                '<span>' + percentage + '%</span>' +
+                '</div>';
+        }
+
+        function renderStatusChart() {
+            var container = document.getElementById('statusChart');
+            var filteredTasks = getFilteredTasks();
+            var statusCounts = {};
+            
+            // Conta tasks per stato
+            var statusKeys = Object.keys(taskStates);
+            for (var i = 0; i < statusKeys.length; i++) {
+                statusCounts[statusKeys[i]] = 0;
+            }
+            
+            for (var i = 0; i < filteredTasks.length; i++) {
+                statusCounts[filteredTasks[i].status]++;
+            }
+            
+            var html = '';
+            for (var status in statusCounts) {
+                var count = statusCounts[status];
+                var percentage = filteredTasks.length > 0 ? (count / filteredTasks.length) * 100 : 0;
+                html += 
+                    '<div style="margin-bottom: 10px;">' +
+                    '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
+                    '<span>' + taskStates[status].label + '</span>' +
+                    '<span>' + count + '</span>' +
+                    '</div>' +
+                    '<div class="progress-bar">' +
+                    '<div class="progress-fill" style="width: ' + percentage + '%;"></div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderPriorityChart() {
+            var container = document.getElementById('priorityChart');
+            var filteredTasks = getFilteredTasks();
+            var priorityCounts = { alta: 0, media: 0, bassa: 0 };
+            
+            for (var i = 0; i < filteredTasks.length; i++) {
+                priorityCounts[filteredTasks[i].priority]++;
+            }
+            
+            var html = '';
+            var colors = { alta: '#e74c3c', media: '#f39c12', bassa: '#27ae60' };
+            
+            for (var priority in priorityCounts) {
+                var count = priorityCounts[priority];
+                var percentage = filteredTasks.length > 0 ? (count / filteredTasks.length) * 100 : 0;
+                html += 
+                    '<div style="margin-bottom: 10px;">' +
+                    '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
+                    '<span>' + priorities[priority].label + '</span>' +
+                    '<span>' + count + '</span>' +
+                    '</div>' +
+                    '<div class="progress-bar">' +
+                    '<div style="height: 100%; background: ' + colors[priority] + '; width: ' + percentage + '%; transition: width 0.3s ease;"></div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderWorkloadChart() {
+            var container = document.getElementById('workloadChart');
+            var filteredTasks = getFilteredTasks();
+            var workload = {};
+            
+            // Inizializza contatori
+            for (var i = 0; i < teamMembers.length; i++) {
+                workload[teamMembers[i]] = 0;
+            }
+            
+            // Conta tasks per membro
+            for (var i = 0; i < filteredTasks.length; i++) {
+                var assignees = Array.isArray(filteredTasks[i].assignee) ? filteredTasks[i].assignee : [filteredTasks[i].assignee];
+                for (var j = 0; j < assignees.length; j++) {
+                    if (workload[assignees[j]] !== undefined) {
+                        workload[assignees[j]]++;
+                    }
+                }
+            }
+            
+            var maxTasks = Math.max.apply(Math, Object.values ? Object.values(workload) : Object.keys(workload).map(function(k){return workload[k]}));
+            var html = '';
+            
+            for (var member in workload) {
+                var count = workload[member];
+                var percentage = maxTasks > 0 ? (count / maxTasks) * 100 : 0;
+                html += 
+                    '<div style="margin-bottom: 10px;">' +
+                    '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
+                    '<span>👤 ' + member + '</span>' +
+                    '<span>' + count + ' tasks</span>' +
+                    '</div>' +
+                    '<div class="progress-bar">' +
+                    '<div class="progress-fill" style="width: ' + percentage + '%;"></div>' +
+                    '</div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        function renderTeamGrid() {
+            var container = document.getElementById('teamGrid');
+            var filteredTasks = getFilteredTasks();
+            var html = '';
+            
+            for (var i = 0; i < teamMembers.length; i++) {
+                var member = teamMembers[i];
+                var memberTasks = filteredTasks.filter(function(task) {
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    return assignees.indexOf(member) !== -1;
+                });
+                
+                var completedTasks = memberTasks.filter(function(t) { return t.status === 'completato'; }).length;
+                var percentage = memberTasks.length > 0 ? Math.round((completedTasks / memberTasks.length) * 100) : 0;
+                
+                html += 
+                    '<div class="team-card">' +
+                    '<div class="team-avatar">' + member.charAt(0) + '</div>' +
+                    '<div style="font-weight: 600; margin-bottom: 5px;">' + member + '</div>' +
+                    '<div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 10px;">' + memberTasks.length + ' tasks attivi</div>' +
+                    '<div class="progress-bar">' +
+                    '<div class="progress-fill" style="width: ' + percentage + '%;"></div>' +
+                    '</div>' +
+                    '<div style="font-size: 0.8rem; margin-top: 5px;">' + percentage + '% completato</div>' +
+                    '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Vista Kanban
+        function renderKanban() {
+            var container = document.getElementById('kanbanBoard');
+            var filteredTasks = getFilteredTasks();
+            
+            var columns = [
+                { id: 'da-iniziare', title: '📋 Da Iniziare', color: '#95a5a6' },
+                { id: 'in-corso', title: '🚀 In Corso', color: '#3498db' },
+                { id: 'in-revisione', title: '👁️ In Revisione', color: '#f39c12' },
+                { id: 'completato', title: '✅ Completato', color: '#27ae60' }
+            ];
+            
+            var html = '';
+            
+            for (var i = 0; i < columns.length; i++) {
+                var column = columns[i];
+                var columnTasks = filteredTasks.filter(function(task) {
+                    return task.status === column.id;
+                });
+                
+                html += 
+                    '<div class="kanban-column">' +
+                    '<div class="kanban-header" style="background: ' + column.color + ';">' +
+                    column.title + ' (' + columnTasks.length + ')' +
+                    '</div>';
+                
+                for (var j = 0; j < columnTasks.length; j++) {
+                    var task = columnTasks[j];
+                    var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+                    var tags = task.tags || [];
+                    
+                    html += 
+                        '<div class="kanban-task" data-task-id="' + task.id + '">' +
+                        '<div style="font-weight: 600; margin-bottom: 8px;">' + task.title + '</div>' +
+                        '<div style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 8px;">' + (task.description || '') + '</div>' +
+                        '<div style="margin-bottom: 8px;">';
+                    
+                    // Tags
+                    for (var k = 0; k < tags.length; k++) {
+                        var tagColors = {
+                            'Urgente': '#e74c3c', 'Cliente': '#3498db', 'Interno': '#95a5a6',
+                            'Marketing': '#e67e22', 'Sviluppo': '#27ae60', 'Vendite': '#9b59b6'
+                        };
+                        html += '<span style="background: ' + (tagColors[tags[k]] || '#95a5a6') + '; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-right: 4px;">' + tags[k] + '</span>';
+                    }
+                    
+                    html += '</div>' +
+                        '<div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">' +
+                        '<span>👤 ' + assignees.join(', ') + '</span>' +
+                        '<span class="task-priority ' + priorities[task.priority].class + '" style="padding: 2px 6px; border-radius: 8px;">' + priorities[task.priority].label + '</span>' +
+                        '</div>' +
+                        '</div>';
+                }
+                
+                html += '</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+
+        // Statistiche
+        function updateStats() {
+            var filteredTasks = getFilteredTasks();
+            
+            document.getElementById('totalTasks').textContent = filteredTasks.length;
+            document.getElementById('inProgressTasks').textContent = 
+                filteredTasks.filter(function(t) { return t.status === 'in-corso'; }).length;
+            document.getElementById('completedTasks').textContent = 
+                filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
+            document.getElementById('pendingTasks').textContent = 
+                filteredTasks.filter(function(t) { return t.status === 'da-iniziare'; }).length;
+        }
+
+        // Controllo Scadenze
+        function checkDeadlines() {
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+            var tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            var overdueTasks = [];
+            var dueTodayTasks = [];
+            var dueSoonTasks = [];
+            
+            for (var i = 0; i < tasks.length; i++) {
+                var task = tasks[i];
+                if (!task.dueDate || task.status === 'completato') continue;
+                
+                var dueDate = new Date(task.dueDate);
+                dueDate.setHours(0, 0, 0, 0);
+                
+                if (dueDate < today) {
+                    overdueTasks.push(task);
+                } else if (dueDate.getTime() === today.getTime()) {
+                    dueTodayTasks.push(task);
+                } else if (dueDate <= new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000)) {
+                    dueSoonTasks.push(task);
+                }
+            }
+            
+            // Notifiche per scadenze
+            for (var i = 0; i < overdueTasks.length; i++) {
+                addNotification('overdue', 'Compito Scaduto!', 
+                    'Il compito "' + overdueTasks[i].title + '" è scaduto', overdueTasks[i].id);
+            }
+            
+            for (var i = 0; i < dueTodayTasks.length; i++) {
+                addNotification('deadline', 'Scadenza Oggi!', 
+                    'Il compito "' + dueTodayTasks[i].title + '" scade oggi', dueTodayTasks[i].id);
+            }
+            
+            var totalAlerts = overdueTasks.length + dueTodayTasks.length + dueSoonTasks.length;
+            if (totalAlerts === 0) {
+                showAlert('success', 'Nessuna Scadenza Urgente', 'Tutti i compiti sono in regola con le scadenze');
+            } else {
+                showAlert('warning', 'Scadenze Rilevate', 
+                    totalAlerts + ' compiti richiedono attenzione per le scadenze');
+            }
+        }
+
+        // Export Excel
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                showAlert('danger', 'Errore', 'Libreria Excel non caricata');
+                return;
+            }
+            
+            var filteredTasks = getFilteredTasks();
+            if (filteredTasks.length === 0) {
+                showAlert('warning', 'Nessun Dato', 'Non ci sono compiti da esportare');
+                return;
+            }
+            
+            var data = [];
+            data.push(['Titolo', 'Descrizione', 'Assegnato a', 'Priorità', 'Stato', 'Scadenza', 'Tags', 'Creato il']);
+            
+            for (var i = 0; i < filteredTasks.length; i++) {
+                var task = filteredTasks[i];
+                var assignees = Array.isArray(task.assignee) ? task.assignee.join(', ') : task.assignee;
+                var tags = task.tags ? task.tags.join(', ') : '';
+                
+                data.push([
+                    task.title,
+                    task.description || '',
+                    assignees,
+                    priorities[task.priority].label,
+                    taskStates[task.status].label,
+                    task.dueDate ? formatDate(task.dueDate) : '',
+                    tags,
+                    formatDate(task.createdAt)
+                ]);
+            }
+            
+            var ws = XLSX.utils.aoa_to_sheet(data);
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Compiti');
+            
+            var fileName = 'Compiti_GruppoVisconti_' + new Date().toISOString().split('T')[0] + '.xlsx';
+            XLSX.writeFile(wb, fileName);
+            
+            showAlert('success', 'Export Completato', 'File Excel scaricato con successo');
+        }
+
+        // Sync Modal (placeholder)
+        function openSyncModal() {
+            showAlert('info', 'Funzione Sync', 'La sincronizzazione sarà disponibile in una versione futura');
+        }
+
+        // Inizializzazione
+        function init() {
+            console.log('🚀 Inizializzazione Task Manager Gruppo Visconti');
+            
+            // Carica dati
+            loadTasks();
+            loadNotifications();
+            
+            // Setup eventi
+            document.getElementById('taskForm').addEventListener('submit', addTask);
+            
+            // Inizializza componenti
+            initializeTags();
+            initializeFilterTags();
+            
+            // Render iniziale
+            renderCurrentView();
+            renderNotifications();
+            updateStats();
+            
+            // Controllo automatico scadenze all'avvio
+            setTimeout(checkDeadlines, 1000);
+            
+            console.log('✅ Task Manager inizializzato con successo');
+        }
+
+        // Avvia l'applicazione quando la pagina è carica
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+
+        // Auto-save ogni 30 secondi
+        setInterval(function() {
+            saveTasks();
+            saveNotifications();
+        }, 30000);
+
+        // Controllo scadenze ogni ora
+        setInterval(checkDeadlines, 60 * 60 * 1000);
+    </script>
+</body>
+</html>
