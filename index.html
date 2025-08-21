@@ -13,9 +13,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Gruppo Visconti Tasks">
     
-    <!-- Preload critical resources -->
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
     <style>
         * {
             margin: 0;
@@ -194,12 +191,6 @@
             outline: none !important;
             box-shadow: none !important;
             background: transparent !important;
-        }
-
-        .form-group label {
-            border: none !important;
-            background: none !important;
-            box-shadow: none !important;
         }
 
         .btn {
@@ -562,7 +553,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label style="display: flex; align-items: center; cursor: pointer; border: none; background: none;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
                             <input type="checkbox" id="enableReminder" style="margin-right: 12px; transform: scale(1.2); accent-color: white;">
                             <span>🔔 Attiva promemoria automatico (1 giorno prima della scadenza)</span>
                         </label>
@@ -586,14 +577,14 @@
                             </button>
                         </div>
                         
-                        <button type="button" class="btn btn-success" onclick="exportToExcel()" style="flex: 0 0 auto;">
-                            📊 Excel
+                        <button type="button" class="btn btn-success" onclick="exportData()" style="flex: 0 0 auto;">
+                            📊 Export
                         </button>
                         <button type="button" class="btn btn-purple" onclick="checkDeadlines()" style="flex: 0 0 auto;">
                             🔔 Scadenze
                         </button>
-                        <button type="button" class="btn btn-purple" onclick="openSyncModal()" style="flex: 0 0 auto;">
-                            🔗 Sync
+                        <button type="button" class="btn btn-purple" onclick="clearAllData()" style="flex: 0 0 auto;">
+                            🗑️ Reset
                         </button>
                     </div>
                 </form>
@@ -712,36 +703,37 @@
     </div>
 
     <script>
-        // Gruppo Visconti Task Manager - Versione Completa
+        // Gruppo Visconti Task Manager - Versione GitHub Pages
         
-        var tasks = [];
-        var notifications = [];
-        var alertCounter = 0;
-        var currentUser = 'Admin';
-        var teamMembers = ['Marco Rossi', 'Luca Bianchi', 'Sara Verde', 'Admin'];
-        var availableTags = ['Urgente', 'Cliente', 'Interno', 'Marketing', 'Sviluppo', 'Vendite'];
-        var currentView = 'lista';
-        var filters = {
-            assignee: 'tutti',
-            priority: 'tutte',
-            status: 'tutti',
-            tags: [],
-            dateRange: 'tutte'
-        };
-
-        var taskStates = {
-            'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
-            'in-corso': { label: '🚀 In Corso', class: 'status-in-corso' },
-            'in-revisione': { label: '👁️ In Revisione', class: 'status-in-revisione' },
-            'completato': { label: '✅ Completato', class: 'status-completato' },
-            'in-pausa': { label: '⏸️ In Pausa', class: 'status-in-pausa' },
-            'annullato': { label: '❌ Annullato', class: 'status-annullato' }
-        };
-
-        var priorities = {
-            'alta': { label: '🔴 Alta', class: 'priority-alta' },
-            'media': { label: '🟡 Media', class: 'priority-media' },
-            'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
+        // Variabili globali
+        var taskManager = {
+            tasks: [],
+            notifications: [],
+            alertCounter: 0,
+            currentUser: 'Admin',
+            teamMembers: ['Marco Rossi', 'Luca Bianchi', 'Sara Verde', 'Admin'],
+            availableTags: ['Urgente', 'Cliente', 'Interno', 'Marketing', 'Sviluppo', 'Vendite'],
+            currentView: 'lista',
+            filters: {
+                assignee: 'tutti',
+                priority: 'tutte',
+                status: 'tutti',
+                tags: [],
+                dateRange: 'tutte'
+            },
+            taskStates: {
+                'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
+                'in-corso': { label: '🚀 In Corso', class: 'status-in-corso' },
+                'in-revisione': { label: '👁️ In Revisione', class: 'status-in-revisione' },
+                'completato': { label: '✅ Completato', class: 'status-completato' },
+                'in-pausa': { label: '⏸️ In Pausa', class: 'status-in-pausa' },
+                'annullato': { label: '❌ Annullato', class: 'status-annullato' }
+            },
+            priorities: {
+                'alta': { label: '🔴 Alta', class: 'priority-alta' },
+                'media': { label: '🟡 Media', class: 'priority-media' },
+                'bassa': { label: '🟢 Bassa', class: 'priority-bassa' }
+            }
         };
 
         // Funzioni di utilità
@@ -755,69 +747,56 @@
             return date.toLocaleDateString('it-IT');
         }
 
-        function saveTasks() {
+        // Sistema di storage sicuro per GitHub Pages
+        function saveData() {
             try {
-                var taskData = JSON.stringify(tasks);
-                document.cookie = "tasks=" + encodeURIComponent(taskData) + "; path=/; max-age=" + (365*24*60*60);
-                console.log('✅ Tasks salvati');
+                var data = {
+                    tasks: taskManager.tasks,
+                    notifications: taskManager.notifications,
+                    lastSaved: new Date().toISOString()
+                };
+                
+                // Usa sessionStorage come fallback se localStorage non è disponibile
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    storage.setItem('gruppoViscontiTasks', JSON.stringify(data));
+                    console.log('✅ Dati salvati con successo');
+                } else {
+                    console.warn('⚠️ Storage non disponibile, dati solo in memoria');
+                }
             } catch (error) {
-                console.error('❌ Errore salvataggio tasks:', error);
+                console.error('❌ Errore salvataggio:', error);
+                showAlert('warning', 'Avviso', 'I dati saranno persi al refresh della pagina');
             }
         }
 
-        function loadTasks() {
+        function loadData() {
             try {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.indexOf('tasks=') === 0) {
-                        var taskData = decodeURIComponent(cookie.substring(6));
-                        tasks = JSON.parse(taskData);
-                        console.log('✅ Tasks caricati:', tasks.length);
-                        return;
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    var savedData = storage.getItem('gruppoViscontiTasks');
+                    if (savedData) {
+                        var data = JSON.parse(savedData);
+                        taskManager.tasks = data.tasks || [];
+                        taskManager.notifications = data.notifications || [];
+                        console.log('✅ Dati caricati: ' + taskManager.tasks.length + ' tasks');
+                        return true;
                     }
                 }
-                tasks = [];
+                return false;
             } catch (error) {
-                console.error('❌ Errore caricamento tasks:', error);
-                tasks = [];
-            }
-        }
-
-        function saveNotifications() {
-            try {
-                var notifData = JSON.stringify(notifications);
-                document.cookie = "notifications=" + encodeURIComponent(notifData) + "; path=/; max-age=" + (365*24*60*60);
-                console.log('✅ Notifications salvate');
-            } catch (error) {
-                console.error('❌ Errore salvataggio notifications:', error);
-            }
-        }
-
-        function loadNotifications() {
-            try {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = cookies[i].trim();
-                    if (cookie.indexOf('notifications=') === 0) {
-                        var notifData = decodeURIComponent(cookie.substring(14));
-                        notifications = JSON.parse(notifData);
-                        console.log('✅ Notifications caricate:', notifications.length);
-                        return;
-                    }
-                }
-                notifications = [];
-            } catch (error) {
-                console.error('❌ Errore caricamento notifications:', error);
-                notifications = [];
+                console.error('❌ Errore caricamento:', error);
+                taskManager.tasks = [];
+                taskManager.notifications = [];
+                return false;
             }
         }
 
         // Sistema di Alert
         function showAlert(type, title, message, duration) {
             duration = duration || 5000;
-            alertCounter++;
-            var alertId = 'alert-' + alertCounter;
+            taskManager.alertCounter++;
+            var alertId = 'alert-' + taskManager.alertCounter;
             
             var alertElement = document.createElement('div');
             alertElement.id = alertId;
@@ -891,13 +870,13 @@
                 read: false
             };
             
-            notifications.unshift(notification);
+            taskManager.notifications.unshift(notification);
             
-            if (notifications.length > 50) {
-                notifications = notifications.slice(0, 50);
+            if (taskManager.notifications.length > 50) {
+                taskManager.notifications = taskManager.notifications.slice(0, 50);
             }
             
-            saveNotifications();
+            saveData();
             renderNotifications();
             
             var icons = {
@@ -920,7 +899,7 @@
             var notificationsList = document.getElementById('notificationsList');
             if (!notificationsList) return;
             
-            if (notifications.length === 0) {
+            if (taskManager.notifications.length === 0) {
                 notificationsList.innerHTML = 
                     '<div class="empty-state" style="padding: 20px;">' +
                     '<div style="font-size: 2rem; margin-bottom: 10px;">🔔</div>' +
@@ -935,7 +914,7 @@
             };
 
             var html = '';
-            var displayNotifications = notifications.slice(0, 10);
+            var displayNotifications = taskManager.notifications.slice(0, 10);
             for (var i = 0; i < displayNotifications.length; i++) {
                 var notif = displayNotifications[i];
                 html += '<div class="notification-item">' +
@@ -987,11 +966,11 @@
                 enableReminder: enableReminder,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                createdBy: currentUser
+                createdBy: taskManager.currentUser
             };
             
-            tasks.push(task);
-            saveTasks();
+            taskManager.tasks.push(task);
+            saveData();
             
             // Reset form
             document.getElementById('taskForm').reset();
@@ -1011,7 +990,7 @@
         }
 
         function editTask(taskId) {
-            var task = tasks.find(function(t) { return t.id === taskId; });
+            var task = taskManager.tasks.find(function(t) { return t.id === taskId; });
             if (!task) return;
             
             document.getElementById('taskTitle').value = task.title;
@@ -1041,8 +1020,8 @@
             updateSelectedTags();
             
             // Rimuovi il task dalla lista (sarà ri-aggiunto quando si salva)
-            tasks = tasks.filter(function(t) { return t.id !== taskId; });
-            saveTasks();
+            taskManager.tasks = taskManager.tasks.filter(function(t) { return t.id !== taskId; });
+            saveData();
             renderCurrentView();
             updateStats();
             
@@ -1052,10 +1031,10 @@
         function deleteTask(taskId) {
             if (!confirm('Sei sicuro di voler eliminare questo compito?')) return;
             
-            var task = tasks.find(function(t) { return t.id === taskId; });
+            var task = taskManager.tasks.find(function(t) { return t.id === taskId; });
             if (task) {
-                tasks = tasks.filter(function(t) { return t.id !== taskId; });
-                saveTasks();
+                taskManager.tasks = taskManager.tasks.filter(function(t) { return t.id !== taskId; });
+                saveData();
                 renderCurrentView();
                 updateStats();
                 
@@ -1067,13 +1046,13 @@
         }
 
         function updateTaskStatus(taskId, newStatus) {
-            for (var i = 0; i < tasks.length; i++) {
-                if (tasks[i].id === taskId) {
-                    var task = tasks[i];
+            for (var i = 0; i < taskManager.tasks.length; i++) {
+                if (taskManager.tasks[i].id === taskId) {
+                    var task = taskManager.tasks[i];
                     var oldStatus = task.status;
                     task.status = newStatus;
                     task.updatedAt = new Date().toISOString();
-                    saveTasks();
+                    saveData();
                     renderCurrentView();
                     updateStats();
                     
@@ -1111,15 +1090,15 @@
 
         // Sistema Filtri
         function applyFilters() {
-            filters.assignee = document.getElementById('filterAssignee').value;
-            filters.priority = document.getElementById('filterPriority').value;
-            filters.status = document.getElementById('filterStatus').value;
+            taskManager.filters.assignee = document.getElementById('filterAssignee').value;
+            taskManager.filters.priority = document.getElementById('filterPriority').value;
+            taskManager.filters.status = document.getElementById('filterStatus').value;
             
             renderCurrentView();
         }
 
         function clearFilters() {
-            filters = {
+            taskManager.filters = {
                 assignee: 'tutti',
                 priority: 'tutte',
                 status: 'tutti',
@@ -1149,40 +1128,40 @@
         }
 
         function updateTagFilters() {
-            filters.tags = [];
+            taskManager.filters.tags = [];
             var activeTags = document.querySelectorAll('.filter-tag.active');
             for (var i = 0; i < activeTags.length; i++) {
-                filters.tags.push(activeTags[i].getAttribute('data-tag'));
+                taskManager.filters.tags.push(activeTags[i].getAttribute('data-tag'));
             }
             renderCurrentView();
         }
 
         function getFilteredTasks() {
-            return tasks.filter(function(task) {
+            return taskManager.tasks.filter(function(task) {
                 // Filtro Assegnato
-                if (filters.assignee !== 'tutti') {
+                if (taskManager.filters.assignee !== 'tutti') {
                     var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
-                    if (assignees.indexOf(filters.assignee) === -1) {
+                    if (assignees.indexOf(taskManager.filters.assignee) === -1) {
                         return false;
                     }
                 }
                 
                 // Filtro Priorità
-                if (filters.priority !== 'tutte' && task.priority !== filters.priority) {
+                if (taskManager.filters.priority !== 'tutte' && task.priority !== taskManager.filters.priority) {
                     return false;
                 }
                 
                 // Filtro Stato
-                if (filters.status !== 'tutti' && task.status !== filters.status) {
+                if (taskManager.filters.status !== 'tutti' && task.status !== taskManager.filters.status) {
                     return false;
                 }
                 
                 // Filtro Tags
-                if (filters.tags.length > 0) {
+                if (taskManager.filters.tags.length > 0) {
                     var taskTags = task.tags || [];
                     var hasMatchingTag = false;
-                    for (var i = 0; i < filters.tags.length; i++) {
-                        if (taskTags.indexOf(filters.tags[i]) !== -1) {
+                    for (var i = 0; i < taskManager.filters.tags.length; i++) {
+                        if (taskTags.indexOf(taskManager.filters.tags[i]) !== -1) {
                             hasMatchingTag = true;
                             break;
                         }
@@ -1198,7 +1177,7 @@
 
         // Gestione Views
         function switchView(viewType) {
-            currentView = viewType;
+            taskManager.currentView = viewType;
             
             // Reset pulsanti
             var viewButtons = document.querySelectorAll('.btn-view');
@@ -1233,11 +1212,11 @@
         }
 
         function renderCurrentView() {
-            if (currentView === 'lista') {
+            if (taskManager.currentView === 'lista') {
                 renderTasks();
-            } else if (currentView === 'dashboard') {
+            } else if (taskManager.currentView === 'dashboard') {
                 renderDashboard();
-            } else if (currentView === 'kanban') {
+            } else if (taskManager.currentView === 'kanban') {
                 renderKanban();
             }
         }
@@ -1287,12 +1266,12 @@
                 
                 html += 
                     '<div class="task-status">' +
-                    '<span class="task-priority ' + priorities[task.priority].class + '">' + priorities[task.priority].label + '</span>' +
+                    '<span class="task-priority ' + taskManager.priorities[task.priority].class + '">' + taskManager.priorities[task.priority].label + '</span>' +
                     '<select class="status-select" onchange="updateTaskStatus(\'' + task.id + '\', this.value)">';
                 
-                for (var status in taskStates) {
+                for (var status in taskManager.taskStates) {
                     var selected = task.status === status ? ' selected' : '';
-                    html += '<option value="' + status + '"' + selected + '>' + taskStates[status].label + '</option>';
+                    html += '<option value="' + status + '"' + selected + '>' + taskManager.taskStates[status].label + '</option>';
                 }
                 
                 html += '</select></div>' +
@@ -1317,6 +1296,8 @@
 
         function renderTeamProductivity() {
             var container = document.getElementById('teamProductivity');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             var completedTasks = filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
             var totalTasks = filteredTasks.length;
@@ -1335,11 +1316,13 @@
 
         function renderStatusChart() {
             var container = document.getElementById('statusChart');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             var statusCounts = {};
             
             // Conta tasks per stato
-            var statusKeys = Object.keys(taskStates);
+            var statusKeys = Object.keys(taskManager.taskStates);
             for (var i = 0; i < statusKeys.length; i++) {
                 statusCounts[statusKeys[i]] = 0;
             }
@@ -1355,7 +1338,7 @@
                 html += 
                     '<div style="margin-bottom: 10px;">' +
                     '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
-                    '<span>' + taskStates[status].label + '</span>' +
+                    '<span>' + taskManager.taskStates[status].label + '</span>' +
                     '<span>' + count + '</span>' +
                     '</div>' +
                     '<div class="progress-bar">' +
@@ -1369,6 +1352,8 @@
 
         function renderPriorityChart() {
             var container = document.getElementById('priorityChart');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             var priorityCounts = { alta: 0, media: 0, bassa: 0 };
             
@@ -1385,7 +1370,7 @@
                 html += 
                     '<div style="margin-bottom: 10px;">' +
                     '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">' +
-                    '<span>' + priorities[priority].label + '</span>' +
+                    '<span>' + taskManager.priorities[priority].label + '</span>' +
                     '<span>' + count + '</span>' +
                     '</div>' +
                     '<div class="progress-bar">' +
@@ -1399,12 +1384,14 @@
 
         function renderWorkloadChart() {
             var container = document.getElementById('workloadChart');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             var workload = {};
             
             // Inizializza contatori
-            for (var i = 0; i < teamMembers.length; i++) {
-                workload[teamMembers[i]] = 0;
+            for (var i = 0; i < taskManager.teamMembers.length; i++) {
+                workload[taskManager.teamMembers[i]] = 0;
             }
             
             // Conta tasks per membro
@@ -1417,7 +1404,11 @@
                 }
             }
             
-            var maxTasks = Math.max.apply(Math, Object.values ? Object.values(workload) : Object.keys(workload).map(function(k){return workload[k]}));
+            var workloadValues = [];
+            for (var member in workload) {
+                workloadValues.push(workload[member]);
+            }
+            var maxTasks = Math.max.apply(Math, workloadValues);
             var html = '';
             
             for (var member in workload) {
@@ -1440,11 +1431,13 @@
 
         function renderTeamGrid() {
             var container = document.getElementById('teamGrid');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             var html = '';
             
-            for (var i = 0; i < teamMembers.length; i++) {
-                var member = teamMembers[i];
+            for (var i = 0; i < taskManager.teamMembers.length; i++) {
+                var member = taskManager.teamMembers[i];
                 var memberTasks = filteredTasks.filter(function(task) {
                     var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
                     return assignees.indexOf(member) !== -1;
@@ -1471,6 +1464,8 @@
         // Vista Kanban
         function renderKanban() {
             var container = document.getElementById('kanbanBoard');
+            if (!container) return;
+            
             var filteredTasks = getFilteredTasks();
             
             var columns = [
@@ -1517,7 +1512,7 @@
                     html += '</div>' +
                         '<div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem;">' +
                         '<span>👤 ' + assignees.join(', ') + '</span>' +
-                        '<span class="task-priority ' + priorities[task.priority].class + '" style="padding: 2px 6px; border-radius: 8px;">' + priorities[task.priority].label + '</span>' +
+                        '<span class="task-priority ' + taskManager.priorities[task.priority].class + '" style="padding: 2px 6px; border-radius: 8px;">' + taskManager.priorities[task.priority].label + '</span>' +
                         '</div>' +
                         '</div>';
                 }
@@ -1532,28 +1527,28 @@
         function updateStats() {
             var filteredTasks = getFilteredTasks();
             
-            document.getElementById('totalTasks').textContent = filteredTasks.length;
-            document.getElementById('inProgressTasks').textContent = 
-                filteredTasks.filter(function(t) { return t.status === 'in-corso'; }).length;
-            document.getElementById('completedTasks').textContent = 
-                filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
-            document.getElementById('pendingTasks').textContent = 
-                filteredTasks.filter(function(t) { return t.status === 'da-iniziare'; }).length;
+            var totalEl = document.getElementById('totalTasks');
+            var inProgressEl = document.getElementById('inProgressTasks');
+            var completedEl = document.getElementById('completedTasks');
+            var pendingEl = document.getElementById('pendingTasks');
+            
+            if (totalEl) totalEl.textContent = filteredTasks.length;
+            if (inProgressEl) inProgressEl.textContent = filteredTasks.filter(function(t) { return t.status === 'in-corso'; }).length;
+            if (completedEl) completedEl.textContent = filteredTasks.filter(function(t) { return t.status === 'completato'; }).length;
+            if (pendingEl) pendingEl.textContent = filteredTasks.filter(function(t) { return t.status === 'da-iniziare'; }).length;
         }
 
         // Controllo Scadenze
         function checkDeadlines() {
             var today = new Date();
             today.setHours(0, 0, 0, 0);
-            var tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
             
             var overdueTasks = [];
             var dueTodayTasks = [];
             var dueSoonTasks = [];
             
-            for (var i = 0; i < tasks.length; i++) {
-                var task = tasks[i];
+            for (var i = 0; i < taskManager.tasks.length; i++) {
+                var task = taskManager.tasks[i];
                 if (!task.dueDate || task.status === 'completato') continue;
                 
                 var dueDate = new Date(task.dueDate);
@@ -1588,52 +1583,132 @@
             }
         }
 
-        // Export Excel
-        function exportToExcel() {
-            if (typeof XLSX === 'undefined') {
-                showAlert('danger', 'Errore', 'Libreria Excel non caricata');
-                return;
-            }
-            
+        // Export dati semplificato
+        function exportData() {
             var filteredTasks = getFilteredTasks();
             if (filteredTasks.length === 0) {
                 showAlert('warning', 'Nessun Dato', 'Non ci sono compiti da esportare');
                 return;
             }
             
-            var data = [];
-            data.push(['Titolo', 'Descrizione', 'Assegnato a', 'Priorità', 'Stato', 'Scadenza', 'Tags', 'Creato il']);
+            var csvContent = 'Titolo,Descrizione,Assegnato a,Priorità,Stato,Scadenza,Tags,Creato il\n';
             
             for (var i = 0; i < filteredTasks.length; i++) {
                 var task = filteredTasks[i];
-                var assignees = Array.isArray(task.assignee) ? task.assignee.join(', ') : task.assignee;
-                var tags = task.tags ? task.tags.join(', ') : '';
+                var assignees = Array.isArray(task.assignee) ? task.assignee.join('; ') : task.assignee;
+                var tags = task.tags ? task.tags.join('; ') : '';
                 
-                data.push([
-                    task.title,
-                    task.description || '',
-                    assignees,
-                    priorities[task.priority].label,
-                    taskStates[task.status].label,
-                    task.dueDate ? formatDate(task.dueDate) : '',
-                    tags,
-                    formatDate(task.createdAt)
-                ]);
+                var row = [
+                    '"' + (task.title || '').replace(/"/g, '""') + '"',
+                    '"' + (task.description || '').replace(/"/g, '""') + '"',
+                    '"' + assignees + '"',
+                    '"' + taskManager.priorities[task.priority].label + '"',
+                    '"' + taskManager.taskStates[task.status].label + '"',
+                    '"' + (task.dueDate ? formatDate(task.dueDate) : '') + '"',
+                    '"' + tags + '"',
+                    '"' + formatDate(task.createdAt) + '"'
+                ].join(',');
+                
+                csvContent += row + '\n';
             }
             
-            var ws = XLSX.utils.aoa_to_sheet(data);
-            var wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, 'Compiti');
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
             
-            var fileName = 'Compiti_GruppoVisconti_' + new Date().toISOString().split('T')[0] + '.xlsx';
-            XLSX.writeFile(wb, fileName);
-            
-            showAlert('success', 'Export Completato', 'File Excel scaricato con successo');
+            if (link.download !== undefined) {
+                var fileName = 'Compiti_GruppoVisconti_' + new Date().toISOString().split('T')[0] + '.csv';
+                var url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                showAlert('success', 'Export Completato', 'File CSV scaricato con successo');
+            } else {
+                showAlert('danger', 'Errore Export', 'Download non supportato su questo browser');
+            }
         }
 
-        // Sync Modal (placeholder)
-        function openSyncModal() {
-            showAlert('info', 'Funzione Sync', 'La sincronizzazione sarà disponibile in una versione futura');
+        // Reset completo dei dati
+        function clearAllData() {
+            if (!confirm('Sei sicuro di voler eliminare TUTTI i compiti e le notifiche? Questa azione non può essere annullata.')) {
+                return;
+            }
+            
+            taskManager.tasks = [];
+            taskManager.notifications = [];
+            
+            try {
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    storage.removeItem('gruppoViscontiTasks');
+                }
+            } catch (error) {
+                console.error('Errore durante la cancellazione:', error);
+            }
+            
+            renderCurrentView();
+            renderNotifications();
+            updateStats();
+            
+            showAlert('info', 'Dati Cancellati', 'Tutti i compiti e le notifiche sono stati eliminati');
+        }
+
+        // Funzioni di demo per popolare con dati di esempio
+        function addSampleTasks() {
+            var sampleTasks = [
+                {
+                    id: generateId(),
+                    title: 'Preparare presentazione Q4',
+                    description: 'Creare slides per la presentazione dei risultati del quarto trimestre',
+                    assignee: ['Marco Rossi'],
+                    priority: 'alta',
+                    dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'in-corso',
+                    tags: ['Urgente', 'Cliente'],
+                    enableReminder: true,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                },
+                {
+                    id: generateId(),
+                    title: 'Aggiornare il sito web',
+                    description: 'Implementare le nuove funzionalità richieste dal cliente',
+                    assignee: ['Luca Bianchi', 'Sara Verde'],
+                    priority: 'media',
+                    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'da-iniziare',
+                    tags: ['Sviluppo', 'Cliente'],
+                    enableReminder: false,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                },
+                {
+                    id: generateId(),
+                    title: 'Campagna marketing sui social',
+                    description: 'Pianificare e lanciare la nuova campagna promozionale',
+                    assignee: ['Sara Verde'],
+                    priority: 'bassa',
+                    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'completato',
+                    tags: ['Marketing', 'Interno'],
+                    enableReminder: false,
+                    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    createdBy: 'Admin'
+                }
+            ];
+            
+            taskManager.tasks = taskManager.tasks.concat(sampleTasks);
+            saveData();
+            renderCurrentView();
+            updateStats();
+            
+            showAlert('success', 'Dati Demo Aggiunti', 'Sono stati aggiunti alcuni compiti di esempio');
         }
 
         // Inizializzazione
@@ -1641,11 +1716,13 @@
             console.log('🚀 Inizializzazione Task Manager Gruppo Visconti');
             
             // Carica dati
-            loadTasks();
-            loadNotifications();
+            var dataLoaded = loadData();
             
             // Setup eventi
-            document.getElementById('taskForm').addEventListener('submit', addTask);
+            var taskForm = document.getElementById('taskForm');
+            if (taskForm) {
+                taskForm.addEventListener('submit', addTask);
+            }
             
             // Inizializza componenti
             initializeTags();
@@ -1656,27 +1733,54 @@
             renderNotifications();
             updateStats();
             
-            // Controllo automatico scadenze all'avvio
-            setTimeout(checkDeadlines, 1000);
+            // Se non ci sono dati, mostra un alert informativo
+            if (!dataLoaded || taskManager.tasks.length === 0) {
+                setTimeout(function() {
+                    showAlert('info', 'Benvenuto!', 
+                        'Questa è la prima volta che usi l\'app. Aggiungi il tuo primo compito!', 8000);
+                }, 1000);
+            } else {
+                // Controllo automatico scadenze se ci sono tasks
+                setTimeout(checkDeadlines, 2000);
+            }
             
             console.log('✅ Task Manager inizializzato con successo');
         }
 
-        // Avvia l'applicazione quando la pagina è carica
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', init);
-        } else {
-            init();
+        // Auto-save ogni 30 secondi
+        function startAutoSave() {
+            setInterval(function() {
+                if (taskManager.tasks.length > 0 || taskManager.notifications.length > 0) {
+                    saveData();
+                }
+            }, 30000);
         }
 
-        // Auto-save ogni 30 secondi
-        setInterval(function() {
-            saveTasks();
-            saveNotifications();
-        }, 30000);
+        // Avvia l'applicazione quando la pagina è carica
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                init();
+                startAutoSave();
+            });
+        } else {
+            init();
+            startAutoSave();
+        }
 
-        // Controllo scadenze ogni ora
-        setInterval(checkDeadlines, 60 * 60 * 1000);
+        // Funzione per aggiungere dati demo (richiamabile dalla console)
+        window.addDemoData = addSampleTasks;
+        
+        // Gestione visibilità pagina per il salvataggio
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'hidden') {
+                saveData();
+            }
+        });
+
+        // Salvataggio prima della chiusura della pagina
+        window.addEventListener('beforeunload', function() {
+            saveData();
+        });
     </script>
 </body>
 </html>
