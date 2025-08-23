@@ -823,7 +823,55 @@
             }
         }
 
-        // Funzione di debug per verificare lo stato dell'app
+        function exportToExcel() {
+            var filteredTasks = getFilteredTasks();
+            if (filteredTasks.length === 0) {
+                showAlert('warning', 'Nessun Dato', 'Non ci sono compiti da esportare');
+                return;
+            }
+            
+            // Crea contenuto CSV
+            var csvContent = 'Titolo,Descrizione,Assegnato a,Priorità,Stato,Scadenza,Tags,Creato il\n';
+            
+            for (var i = 0; i < filteredTasks.length; i++) {
+                var task = filteredTasks[i];
+                var assignees = Array.isArray(task.assignee) ? task.assignee.join('; ') : task.assignee;
+                var tags = task.tags ? task.tags.join('; ') : '';
+                
+                var row = [
+                    '"' + (task.title || '').replace(/"/g, '""') + '"',
+                    '"' + (task.description || '').replace(/"/g, '""') + '"',
+                    '"' + assignees + '"',
+                    '"' + taskManager.priorities[task.priority].label + '"',
+                    '"' + taskManager.taskStates[task.status].label + '"',
+                    '"' + (task.dueDate ? formatDate(task.dueDate) : '') + '"',
+                    '"' + tags + '"',
+                    '"' + formatDate(task.createdAt) + '"'
+                ].join(',');
+                
+                csvContent += row + '\n';
+            }
+            
+            // Crea e scarica il file
+            var blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            
+            if (link.download !== undefined) {
+                var fileName = 'Compiti_GruppoVisconti_' + new Date().toISOString().split('T')[0] + '.csv';
+                var url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', fileName);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                var searchInfo = taskManager.searchTerm ? ' (filtrati dalla ricerca "' + taskManager.searchTerm + '")' : '';
+                showAlert('success', 'Excel Scaricato', 'File CSV con ' + filteredTasks.length + ' compiti scaricato' + searchInfo);
+            } else {
+                showAlert('danger', 'Errore Export', 'Download non supportato su questo browser');
+            }
+        }
         function debugApp() {
             console.log('=== DEBUG TASK MANAGER ===');
             console.log('Tasks totali:', taskManager.tasks.length);
@@ -1421,11 +1469,8 @@
                             </button>
                         </div>
                         
-                        <button type="button" class="btn btn-success" onclick="exportAllData()" style="flex: 0 0 auto;">
-                            💾 Backup
-                        </button>
-                        <button type="button" class="btn btn-success" onclick="importData()" style="flex: 0 0 auto;">
-                            📥 Import
+                        <button type="button" class="btn btn-success" onclick="exportToExcel()" style="flex: 0 0 auto;">
+                            📊 Esporta Excel
                         </button>
                         <button type="button" class="btn btn-purple" onclick="requestNotificationPermission()" style="flex: 0 0 auto;">
                             🔔 Notifiche
@@ -1572,3 +1617,4 @@
                 'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
                 'in-corso': { label: '🚀 In Corso', class: 'status-in-corso' },
                 'in-revisione': { label: '👁️
+                
