@@ -144,6 +144,67 @@
             showAlert(alertType, title, message);
         }
 
+        function highlightSearchTerm(text, searchTerm) {
+            if (!searchTerm || !text) return text;
+            
+            var regex = new RegExp('(' + searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\        function addNotification(type, title, message, taskId) {
+            var notification = {
+                id: generateId(),
+                type: type,
+                title: title,
+                message: message,
+                taskId: taskId || null,
+                timestamp: new Date().toISOString(),
+                read: false
+            };
+            
+            taskManager.notifications.unshift(notification);
+            if (taskManager.notifications.length > 50) {
+                taskManager.notifications = taskManager.notifications.slice(0, 50);
+            }
+            
+            saveData();
+            renderNotifications();
+            
+            var alertType = type === 'overdue' ? 'danger' : 
+                           type === 'deadline' ? 'warning' : 
+                           type === 'completed' ? 'success' : 'info';
+            
+            showAlert(alertType, title, message);
+        }
+
+        function renderNotifications() {
+            var notificationsList = document.getElementById('notificationsList');
+            if (!notificationsList) return;
+            
+            if (taskManager.notifications.length === 0) {
+                notificationsList.innerHTML = 
+                    '<div class="empty-state"><div style="font-size: 2rem; margin-bottom: 10px;">🔔</div>' +
+                    '<p>Nessuna notifica al momento</p></div>';
+                return;
+            }
+
+            var icons = { 'deadline': '⏰', 'overdue': '🚨', 'completed': '✅', 'assigned': '📋', 'info': 'ℹ️' };
+            var html = '';
+            var displayNotifications = taskManager.notifications.slice(0, 10);
+            
+            for (var i = 0; i < displayNotifications.length; i++) {
+                var notif = displayNotifications[i];
+                html += '<div class="notification-item">' +
+                    '<div class="notification-icon">' + (icons[notif.type] || '🔔') + '</div>' +
+                    '<div class="notification-content">' +
+                    '<div class="notification-title">' + notif.title + '</div>' +
+                    '<div class="notification-text">' + notif.message + '</div>' +
+                    '</div>' +
+                    '<div class="notification-time">' + getTimeAgo(notif.timestamp) + '</div>' +
+                    '</div>';
+            }
+            
+            notificationsList.innerHTML = html;
+        }') + ')', 'gi');
+            return text.replace(regex, '<mark style="background: #fff3cd; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+        }
+
         function renderNotifications() {
             var notificationsList = document.getElementById('notificationsList');
             if (!notificationsList) return;
@@ -1617,4 +1678,3 @@
                 'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
                 'in-corso': { label: '🚀 In Corso', class: 'status-in-corso' },
                 'in-revisione': { label: '👁️
-                
