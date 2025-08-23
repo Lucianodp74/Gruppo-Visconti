@@ -7,6 +7,7 @@
             teamMembers: ['LUCIANO', 'ANTONIO', 'LUIGI', 'DARIO', 'NOEMI', 'VINCENZO', 'ROBERTO', 'MARIANO'],
             currentView: 'lista',
             editingTaskId: null,
+            searchTerm: '', // Nuovo: termine di ricerca
             filters: { assignee: 'tutti', priority: 'tutte', status: 'tutti', tags: [] },
             taskStates: {
                 'da-iniziare': { label: '📋 Da Iniziare', class: 'status-da-iniziare' },
@@ -446,11 +447,18 @@
             var filteredTasks = getFilteredTasks();
             
             if (filteredTasks.length === 0) {
+                var emptyMessage = taskManager.searchTerm ? 
+                    'Nessun compito trovato per "' + taskManager.searchTerm + '"' :
+                    'Nessun compito presente';
+                var emptySubMessage = taskManager.searchTerm ? 
+                    'Prova a modificare i termini di ricerca o i filtri' :
+                    'Aggiungi il tuo primo compito utilizzando il form sopra';
+                
                 tasksGrid.innerHTML = 
                     '<div class="empty-state">' +
-                    '<div style="font-size: 4rem; margin-bottom: 20px;">📋</div>' +
-                    '<h3>Nessun compito presente</h3>' +
-                    '<p>Aggiungi il tuo primo compito utilizzando il form sopra</p>' +
+                    '<div style="font-size: 4rem; margin-bottom: 20px;">🔍</div>' +
+                    '<h3>' + emptyMessage + '</h3>' +
+                    '<p>' + emptySubMessage + '</p>' +
                     '</div>';
                 return;
             }
@@ -461,12 +469,22 @@
                 var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
                 var tags = task.tags || [];
                 
+                // Evidenzia i termini di ricerca nel titolo e descrizione
+                var highlightedTitle = highlightSearchTerm(task.title, taskManager.searchTerm);
+                var highlightedDescription = highlightSearchTerm(task.description || 'Nessuna descrizione', taskManager.searchTerm);
+                
+                // Evidenzia gli assegnatari che corrispondono alla ricerca
+                var highlightedAssignees = [];
+                for (var a = 0; a < assignees.length; a++) {
+                    highlightedAssignees.push(highlightSearchTerm(assignees[a], taskManager.searchTerm));
+                }
+                
                 html += 
                     '<div class="task-card">' +
-                    '<div class="task-title">' + task.title + '</div>' +
-                    '<div class="task-description">' + (task.description || 'Nessuna descrizione') + '</div>' +
+                    '<div class="task-title">' + highlightedTitle + '</div>' +
+                    '<div class="task-description">' + highlightedDescription + '</div>' +
                     '<div class="task-meta">' +
-                    '<span>👤 ' + assignees.join(', ') + '</span>' +
+                    '<span>👤 ' + highlightedAssignees.join(', ') + '</span>' +
                     '<span>📅 ' + (task.dueDate ? formatDate(task.dueDate) : 'Nessuna scadenza') + '</span>' +
                     '</div>';
                 
@@ -477,7 +495,8 @@
                             'Urgente': '#e74c3c', 'Cliente': '#3498db', 'Interno': '#95a5a6',
                             'Marketing': '#e67e22', 'Sviluppo': '#27ae60', 'Vendite': '#9b59b6'
                         };
-                        html += '<span style="background: ' + (tagColors[tags[j]] || '#95a5a6') + '; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-right: 4px;">' + tags[j] + '</span>';
+                        var highlightedTag = highlightSearchTerm(tags[j], taskManager.searchTerm);
+                        html += '<span style="background: ' + (tagColors[tags[j]] || '#95a5a6') + '; color: white; padding: 2px 6px; border-radius: 8px; font-size: 0.7rem; margin-right: 4px;">' + highlightedTag + '</span>';
                     }
                     html += '</div>';
                 }
@@ -1415,39 +1434,53 @@
                 </form>
             </div>
 
-            <!-- Barra Filtri -->
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
-                <div style="font-weight: 600; color: #2c3e50;">🔍 Filtri:</div>
+            <!-- Barra Filtri e Ricerca -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <!-- Barra di Ricerca -->
+                <div style="margin-bottom: 20px;">
+                    <div style="position: relative; max-width: 500px;">
+                        <input type="text" id="searchInput" placeholder="🔍 Cerca compiti per titolo, descrizione, assegnatario..." 
+                               style="width: 100%; padding: 12px 45px 12px 15px; border: 2px solid #ddd; border-radius: 25px; font-size: 14px; transition: all 0.3s;"
+                               oninput="handleSearch()" onkeyup="if(event.key==='Escape') clearSearch()">
+                        <button onclick="clearSearch()" id="clearSearchBtn" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: #e74c3c; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 12px; display: none;">✕</button>
+                    </div>
+                    <div id="searchResults" style="margin-top: 10px; font-size: 0.9rem; color: #7f8c8d;"></div>
+                </div>
                 
-                <select id="filterAssignee" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="tutti">👥 Tutti</option>
-                    <option value="LUCIANO">👤 LUCIANO</option>
-                    <option value="ANTONIO">👤 ANTONIO</option>
-                    <option value="LUIGI">👤 LUIGI</option>
-                    <option value="DARIO">👤 DARIO</option>
-                    <option value="NOEMI">👤 NOEMI</option>
-                    <option value="VINCENZO">👤 VINCENZO</option>
-                    <option value="ROBERTO">👤 ROBERTO</option>
-                    <option value="MARIANO">👤 MARIANO</option>
-                </select>
-                
-                <select id="filterPriority" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="tutte">🎯 Tutte</option>
-                    <option value="alta">🔴 Alta</option>
-                    <option value="media">🟡 Media</option>
-                    <option value="bassa">🟢 Bassa</option>
-                </select>
-                
-                <select id="filterStatus" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                    <option value="tutti">📋 Tutti</option>
-                    <option value="da-iniziare">📋 Da Iniziare</option>
-                    <option value="in-corso">🚀 In Corso</option>
-                    <option value="completato">✅ Completato</option>
-                </select>
-                
-                <button onclick="clearFilters()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
-                    🗑️ Reset
-                </button>
+                <!-- Filtri -->
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
+                    <div style="font-weight: 600; color: #2c3e50;">🔍 Filtri:</div>
+                    
+                    <select id="filterAssignee" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="tutti">👥 Tutti</option>
+                        <option value="LUCIANO">👤 LUCIANO</option>
+                        <option value="ANTONIO">👤 ANTONIO</option>
+                        <option value="LUIGI">👤 LUIGI</option>
+                        <option value="DARIO">👤 DARIO</option>
+                        <option value="NOEMI">👤 NOEMI</option>
+                        <option value="VINCENZO">👤 VINCENZO</option>
+                        <option value="ROBERTO">👤 ROBERTO</option>
+                        <option value="MARIANO">👤 MARIANO</option>
+                    </select>
+                    
+                    <select id="filterPriority" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="tutte">🎯 Tutte</option>
+                        <option value="alta">🔴 Alta</option>
+                        <option value="media">🟡 Media</option>
+                        <option value="bassa">🟢 Bassa</option>
+                    </select>
+                    
+                    <select id="filterStatus" onchange="applyFilters()" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="tutti">📋 Tutti</option>
+                        <option value="da-iniziare">📋 Da Iniziare</option>
+                        <option value="in-corso">🚀 In Corso</option>
+                        <option value="completato">✅ Completato</option>
+                    </select>
+                    
+                    <button onclick="clearAllFilters()" style="background: #e74c3c; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">
+                        🗑️ Reset Tutto
+                    </button>
+                </div>
             </div>
 
             <!-- Statistiche -->
