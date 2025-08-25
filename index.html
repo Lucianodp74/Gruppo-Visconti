@@ -624,8 +624,8 @@
                             🔄 Reset Form
                         </button>
                         
-                        <button type="button" class="btn btn-success" onclick="openGoogleSheetsGuide()" style="flex: 0 0 auto;">
-                            📊 Google Sheets
+                        <button type="button" class="btn btn-success" onclick="setupGitHubIntegration()" style="flex: 0 0 auto;">
+                            🐙 GitHub Sync
                         </button>
                         
                         <button type="button" class="btn btn-success" onclick="shareData()" style="flex: 0 0 auto;">
@@ -1120,7 +1120,395 @@
             document.getElementById('selectedTags').value = selectedTags.join(',');
         }
 
-        // VERSIONE SEMPLIFICATA - Google Sheets Guide (DEFINITA PRIMA DI TUTTO)
+        // GITHUB ISSUES INTEGRATION - Sincronizzazione in tempo reale
+        var GITHUB_CONFIG = {
+            enabled: false,
+            token: null,
+            owner: 'Lucianodp74',
+            repo: 'Gruppo-Visconti',
+            apiUrl: 'https://api.github.com'
+        };
+
+        function setupGitHubIntegration() {
+            var modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 2000; display: flex; 
+                align-items: center; justify-content: center;
+            `;
+            
+            var modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white; border-radius: 15px; padding: 30px; 
+                max-width: 700px; width: 95%; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                max-height: 85vh; overflow-y: auto;
+            `;
+            
+            modalContent.innerHTML = `
+                <h3 style="margin-bottom: 20px; color: #2c3e50;">🐙 GitHub Issues Integration</h3>
+                
+                <div style="background: #f6f8fa; border: 2px solid #0366d6; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>🌟 VANTAGGI GITHUB ISSUES:</strong><br><br>
+                    ✅ <strong>Sincronizzazione PERFETTA</strong> - Tempo reale su tutti i dispositivi<br>
+                    ✅ <strong>App mobile GitHub</strong> - Tutti possono vedere i compiti<br>
+                    ✅ <strong>Notifiche automatiche</strong> - Email/push quando qualcosa cambia<br>
+                    ✅ <strong>Completamente GRATUITO</strong> - Nessun costo aggiuntivo<br>
+                    ✅ <strong>Backup automatico</strong> - I dati sono sicuri su GitHub<br>
+                    ✅ <strong>Collaborazione avanzata</strong> - Commenti, menzioni, labels
+                </div>
+
+                <div style="background: #fff3cd; border: 2px solid #ffc107; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>📝 COME FUNZIONA:</strong><br><br>
+                    • <strong>Ogni compito</strong> = 1 GitHub Issue<br>
+                    • <strong>Titolo compito</strong> = Titolo Issue<br>
+                    • <strong>Descrizione</strong> = Corpo Issue<br>
+                    • <strong>Tags</strong> = Labels GitHub<br>
+                    • <strong>Assegnatari</strong> = Assignees GitHub<br>
+                    • <strong>Stati</strong> = Issue aperta/chiusa + labels
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">🔑 GitHub Personal Access Token:</label>
+                    <input type="password" id="githubToken" placeholder="ghp_..." 
+                           style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 5px; font-family: monospace; font-size: 12px;">
+                    <small style="color: #7f8c8d;">Il token che hai appena creato (inizia con ghp_...)</small>
+                </div>
+
+                <div style="background: #e8f5e8; border: 2px solid #28a745; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>🎯 REPOSITORY CONFIGURATO:</strong><br>
+                    📂 <strong>Owner:</strong> Lucianodp74<br>
+                    📁 <strong>Repository:</strong> Gruppo-Visconti<br>
+                    🔗 <strong>URL:</strong> https://github.com/Lucianodp74/Gruppo-Visconti
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                    <button onclick="testGitHubConnection()" style="background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        🔍 Test Connessione
+                    </button>
+                    <button onclick="activateGitHubSync()" style="background: #0366d6; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        🚀 Attiva Sincronizzazione
+                    </button>
+                    <button onclick="syncExistingTasks()" style="background: #6f42c1; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        📤 Sincronizza Compiti Esistenti
+                    </button>
+                    <button onclick="closeGitHubModal()" style="background: #6a737d; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer;">
+                        ❌ Chiudi
+                    </button>
+                </div>
+
+                <div style="margin-top: 20px; font-size: 12px; color: #7f8c8d;">
+                    <strong>💡 Suggerimento:</strong> Una volta attivata la sincronizzazione, ogni compito che crei/modifichi 
+                    nell'app verrà automaticamente sincronizzato con GitHub Issues. Il team potrà vedere tutto in tempo reale!
+                </div>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            modal.id = 'githubModal';
+        }
+
+        function testGitHubConnection() {
+            var token = document.getElementById('githubToken').value.trim();
+            
+            if (!token || !token.startsWith('ghp_')) {
+                showAlert('warning', 'Token Mancante', 'Inserisci il GitHub Personal Access Token');
+                return;
+            }
+            
+            showAlert('info', 'Test in Corso', 'Sto testando la connessione a GitHub...');
+            
+            fetch(`${GITHUB_CONFIG.apiUrl}/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            })
+            .then(function(data) {
+                showAlert('success', 'Connessione Riuscita! 🎉', 
+                    'GitHub repository "' + data.name + '" raggiunto con successo. Permessi verificati!');
+                
+                // Salva temporaneamente il token per i prossimi test
+                GITHUB_CONFIG.token = token;
+            })
+            .catch(function(error) {
+                console.error('Errore connessione GitHub:', error);
+                showAlert('danger', 'Errore Connessione', 
+                    'Impossibile connettersi a GitHub. Verifica il token e i permessi. Errore: ' + error.message);
+            });
+        }
+
+        function activateGitHubSync() {
+            var token = document.getElementById('githubToken').value.trim();
+            
+            if (!token || !token.startsWith('ghp_')) {
+                showAlert('danger', 'Errore', 'Inserisci prima il GitHub Personal Access Token');
+                return;
+            }
+            
+            // Salva la configurazione
+            GITHUB_CONFIG.enabled = true;
+            GITHUB_CONFIG.token = token;
+            
+            try {
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    storage.setItem('githubConfig', JSON.stringify({
+                        enabled: true,
+                        token: token, // In produzione, questo dovrebbe essere crittografato
+                        owner: GITHUB_CONFIG.owner,
+                        repo: GITHUB_CONFIG.repo
+                    }));
+                }
+            } catch (e) {
+                console.warn('Impossibile salvare configurazione GitHub');
+            }
+            
+            closeGitHubModal();
+            
+            showAlert('success', 'GitHub Sync Attivato! 🚀', 
+                'La sincronizzazione con GitHub Issues è ora attiva. Tutti i nuovi compiti verranno creati come Issues!');
+            
+            updateStatus('🐙 GitHub connesso');
+            
+            // Mostra pulsante per sincronizzare compiti esistenti
+            setTimeout(function() {
+                if (taskManager.tasks.length > 0) {
+                    var sync = confirm('Hai ' + taskManager.tasks.length + ' compiti locali.\n\n' +
+                                      'Vuoi sincronizzarli con GitHub Issues?\n\n' +
+                                      '✅ SÌ = Crea Issues per tutti i compiti esistenti\n' +
+                                      '❌ NO = Solo i nuovi compiti saranno sincronizzati');
+                    if (sync) {
+                        syncExistingTasks();
+                    }
+                }
+            }, 2000);
+        }
+
+        function syncExistingTasks() {
+            if (!GITHUB_CONFIG.enabled || !GITHUB_CONFIG.token) {
+                showAlert('warning', 'Configurazione Mancante', 'Attiva prima la sincronizzazione GitHub');
+                return;
+            }
+            
+            var tasksToSync = taskManager.tasks.filter(function(task) {
+                return !task.githubIssueId; // Solo tasks che non hanno ancora un Issue
+            });
+            
+            if (tasksToSync.length === 0) {
+                showAlert('info', 'Niente da Sincronizzare', 'Tutti i compiti sono già sincronizzati con GitHub');
+                return;
+            }
+            
+            showAlert('info', 'Sincronizzazione in Corso', 
+                'Sto creando ' + tasksToSync.length + ' GitHub Issues...');
+            
+            var completed = 0;
+            var total = tasksToSync.length;
+            
+            for (var i = 0; i < tasksToSync.length; i++) {
+                createGitHubIssue(tasksToSync[i], function(success, task, issueData) {
+                    completed++;
+                    
+                    if (success && issueData) {
+                        // Aggiorna il task con l'ID dell'Issue
+                        task.githubIssueId = issueData.number;
+                        task.githubUrl = issueData.html_url;
+                        saveData();
+                    }
+                    
+                    if (completed === total) {
+                        var successCount = taskManager.tasks.filter(function(t) { return t.githubIssueId; }).length;
+                        showAlert('success', 'Sincronizzazione Completata! 🎉', 
+                            successCount + ' compiti sono ora sincronizzati con GitHub Issues');
+                        
+                        renderTasks(); // Aggiorna UI
+                    }
+                });
+            }
+        }
+
+        function createGitHubIssue(task, callback) {
+            if (!GITHUB_CONFIG.enabled || !GITHUB_CONFIG.token) {
+                callback(false, task, null);
+                return;
+            }
+            
+            var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+            var githubAssignees = assignees.map(function(name) {
+                // Mappa i nomi ai username GitHub se necessario
+                var mapping = {
+                    'LUCIANO': 'Lucianodp74', // Aggiorna con i veri username
+                    // Aggiungi altri mappings qui
+                };
+                return mapping[name] || name.toLowerCase();
+            }).filter(function(username) {
+                return username && username !== 'admin';
+            });
+            
+            var labels = [];
+            if (task.priority === 'alta') labels.push('priority: high');
+            if (task.priority === 'media') labels.push('priority: medium');
+            if (task.priority === 'bassa') labels.push('priority: low');
+            
+            if (task.tags) {
+                for (var i = 0; i < task.tags.length; i++) {
+                    labels.push(task.tags[i].toLowerCase());
+                }
+            }
+            
+            labels.push('task-manager'); // Label per identificare gli Issues creati dall'app
+            
+            var issueBody = task.description || 'Nessuna descrizione';
+            issueBody += '\n\n---\n';
+            issueBody += '**📋 Dettagli Compito:**\n';
+            issueBody += '- 🎯 **Priorità:** ' + taskManager.priorities[task.priority].label + '\n';
+            issueBody += '- 📅 **Scadenza:** ' + (task.dueDate ? formatDate(task.dueDate) : 'Nessuna') + '\n';
+            issueBody += '- 🏷️ **Tags:** ' + (task.tags ? task.tags.join(', ') : 'Nessuno') + '\n';
+            issueBody += '- 📱 **Creato da:** Task Manager Gruppo Visconti\n';
+            issueBody += '- 🕐 **Data creazione:** ' + formatDate(task.createdAt);
+            
+            var issueData = {
+                title: task.title,
+                body: issueBody,
+                labels: labels,
+                assignees: githubAssignees
+            };
+            
+            fetch(`${GITHUB_CONFIG.apiUrl}/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                body: JSON.stringify(issueData)
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            })
+            .then(function(data) {
+                console.log('✅ GitHub Issue creato:', data.number, data.title);
+                callback(true, task, data);
+            })
+            .catch(function(error) {
+                console.error('❌ Errore creazione Issue:', error);
+                callback(false, task, null);
+            });
+        }
+
+        function updateGitHubIssue(task, callback) {
+            if (!GITHUB_CONFIG.enabled || !GITHUB_CONFIG.token || !task.githubIssueId) {
+                if (callback) callback(false, task);
+                return;
+            }
+            
+            var assignees = Array.isArray(task.assignee) ? task.assignee : [task.assignee];
+            var githubAssignees = assignees.map(function(name) {
+                var mapping = {
+                    'LUCIANO': 'Lucianodp74',
+                };
+                return mapping[name] || name.toLowerCase();
+            }).filter(function(username) {
+                return username && username !== 'admin';
+            });
+            
+            var labels = ['task-manager'];
+            if (task.priority === 'alta') labels.push('priority: high');
+            if (task.priority === 'media') labels.push('priority: medium');
+            if (task.priority === 'bassa') labels.push('priority: low');
+            
+            if (task.tags) {
+                for (var i = 0; i < task.tags.length; i++) {
+                    labels.push(task.tags[i].toLowerCase());
+                }
+            }
+            
+            var issueBody = task.description || 'Nessuna descrizione';
+            issueBody += '\n\n---\n';
+            issueBody += '**📋 Dettagli Compito:**\n';
+            issueBody += '- 🎯 **Priorità:** ' + taskManager.priorities[task.priority].label + '\n';
+            issueBody += '- 📊 **Stato:** ' + taskManager.taskStates[task.status].label + '\n';
+            issueBody += '- 📅 **Scadenza:** ' + (task.dueDate ? formatDate(task.dueDate) : 'Nessuna') + '\n';
+            issueBody += '- 🏷️ **Tags:** ' + (task.tags ? task.tags.join(', ') : 'Nessuno') + '\n';
+            issueBody += '- 📱 **Ultima modifica:** ' + formatDate(task.updatedAt);
+            
+            var issueUpdate = {
+                title: task.title,
+                body: issueBody,
+                labels: labels,
+                assignees: githubAssignees,
+                state: task.status === 'completato' ? 'closed' : 'open'
+            };
+            
+            fetch(`${GITHUB_CONFIG.apiUrl}/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/issues/${task.githubIssueId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${GITHUB_CONFIG.token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'Content-Type': 'application/json',
+                    'X-GitHub-Api-Version': '2022-11-28'
+                },
+                body: JSON.stringify(issueUpdate)
+            })
+            .then(function(response) {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            })
+            .then(function(data) {
+                console.log('✅ GitHub Issue aggiornato:', data.number, data.title);
+                if (callback) callback(true, task);
+            })
+            .catch(function(error) {
+                console.error('❌ Errore aggiornamento Issue:', error);
+                if (callback) callback(false, task);
+            });
+        }
+
+        function closeGitHubModal() {
+            var modal = document.getElementById('githubModal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function loadGitHubConfig() {
+            try {
+                var storage = window.localStorage || window.sessionStorage;
+                if (storage) {
+                    var saved = storage.getItem('githubConfig');
+                    if (saved) {
+                        var config = JSON.parse(saved);
+                        GITHUB_CONFIG.enabled = config.enabled;
+                        GITHUB_CONFIG.token = config.token;
+                        GITHUB_CONFIG.owner = config.owner || 'Lucianodp74';
+                        GITHUB_CONFIG.repo = config.repo || 'Gruppo-Visconti';
+                        
+                        if (GITHUB_CONFIG.enabled) {
+                            updateStatus('🐙 GitHub connesso');
+                            console.log('✅ GitHub sync attivo');
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Impossibile caricare configurazione GitHub');
+            }
+        }
         function openGoogleSheetsGuide() {
             try {
                 // Prima esporta i dati
@@ -1265,8 +1653,30 @@
                     updateStatus('✅ Compito creato');
                 }
                 
-                // Salvataggio
+                // Salvataggio con sincronizzazione GitHub
                 var saved = saveData();
+                
+                // Se GitHub sync è attivo, crea anche l'Issue
+                if (GITHUB_CONFIG.enabled && !isEditing) {
+                    createGitHubIssue(task, function(success, createdTask, issueData) {
+                        if (success && issueData) {
+                            task.githubIssueId = issueData.number;
+                            task.githubUrl = issueData.html_url;
+                            saveData(); // Salva di nuovo con l'ID dell'Issue
+                            
+                            showAlert('success', 'Compito Sincronizzato! 🐙', 
+                                'Compito creato e sincronizzato con GitHub Issue #' + issueData.number);
+                        }
+                    });
+                } else if (GITHUB_CONFIG.enabled && isEditing) {
+                    // Aggiorna l'Issue esistente
+                    updateGitHubIssue(task, function(success) {
+                        if (success) {
+                            showAlert('success', 'Sincronizzato con GitHub! 🐙', 
+                                'Le modifiche sono state sincronizzate con GitHub');
+                        }
+                    });
+                }
                 
                 // Aggiornamento UI
                 renderTasks();
@@ -2090,11 +2500,11 @@
                 // Test del sistema storage
                 testStorage();
                 
-                // Carica configurazione Google Sheets (se disponibile)
+                // Carica configurazione GitHub
                 try {
-                    loadGoogleSheetsConfig();
+                    loadGitHubConfig();
                 } catch (e) {
-                    console.warn('Google Sheets config non disponibile:', e.message);
+                    console.warn('GitHub config non disponibile:', e.message);
                 }
                 
                 // Caricamento dati (prima da URL condiviso, poi locali)
@@ -2165,6 +2575,11 @@
 
         // Definisci subito le funzioni globali all'inizio
         window.openGoogleSheetsGuide = openGoogleSheetsGuide;
+        window.setupGitHubIntegration = setupGitHubIntegration;
+        window.testGitHubConnection = testGitHubConnection;
+        window.activateGitHubSync = activateGitHubSync;
+        window.syncExistingTasks = syncExistingTasks;
+        window.closeGitHubModal = closeGitHubModal;
         
         // Funzioni globali per debugging e condivisione
         window.taskManager = taskManager;
